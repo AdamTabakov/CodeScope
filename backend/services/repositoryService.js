@@ -1,6 +1,7 @@
 const MAX_FILE_COUNT = 800
 const MAX_REPO_SIZE_KB = 102400
 
+// Binary file extensions to ignore when loading repository files
 const BINARY_EXTENSIONS = new Set([
   '.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp', '.bmp', '.tiff',
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
@@ -10,12 +11,12 @@ const BINARY_EXTENSIONS = new Set([
   '.exe', '.dll', '.so', '.dylib', '.obj',
   '.pyc', '.pyo', '.class', '.o',
 ])
-
+// Common directory prefixes to ignore when loading repository files
 const IGNORE_PREFIXES = [
   '.git/', 'node_modules/', '.next/', 'dist/', 'build/',
   '.venv/', '__pycache__/', 'coverage/',
 ]
-
+//  Mapping of file extensions to programming languages for language detection
 const LANGUAGE_BY_EXTENSION = new Map([
   ['.js', 'JavaScript'], ['.jsx', 'JavaScript'], ['.mjs', 'JavaScript'], ['.cjs', 'JavaScript'],
   ['.ts', 'TypeScript'], ['.tsx', 'TypeScript'],
@@ -27,40 +28,42 @@ const LANGUAGE_BY_EXTENSION = new Map([
   ['.sql', 'SQL'], ['.sh', 'Shell'], ['.ps1', 'PowerShell'],
 ])
 
+// Helper function to extract the file extension from a path
 function extensionOf(path) {
   const dot = path.lastIndexOf('.')
   return dot === -1 ? '' : path.slice(dot).toLowerCase()
 }
 
+// Helper function to determine if a file is binary based on its extension
 function isBinary(path) {
   return BINARY_EXTENSIONS.has(extensionOf(path))
 }
-
+// Helper function to determine if a path should be ignored based on common directory prefixes
 function shouldIgnore(path) {
   return IGNORE_PREFIXES.some((prefix) => path.startsWith(prefix))
 }
-
+// Helper function to parse a GitHub repository URL and extract owner, repo, branch, and subpath
 export function parseGitHubUrl(raw) {
   if (!raw || typeof raw !== 'string') {
     throw new Error('GitHub repository URL is required.')
   }
-
+  // Normalize the URL by trimming whitespace and removing trailing slashes
   const normalized = raw.trim().replace(/\/+$/, '')
   const withProtocol =
     normalized.startsWith('http://') || normalized.startsWith('https://')
       ? normalized
       : `https://${normalized}`
-
+  // Validate that the URL is a GitHub URL and extract its components
   const parsed = new URL(withProtocol)
   if (parsed.hostname.toLowerCase() !== 'github.com') {
     throw new Error('Only public GitHub repo URLs are supported (https://github.com/owner/repo).')
   }
-
+  // Split the pathname into parts and filter out empty segments
   const parts = parsed.pathname.split('/').filter(Boolean)
   if (parts.length < 2) {
     throw new Error('Use the full repo URL, e.g. https://github.com/owner/repo.')
   }
-
+  // Find the index of the branch or blob segment to extract branch and subpath information
   const branchIdx = parts.findIndex((part) => part === 'tree' || part === 'blob')
   return {
     owner: parts[0],
@@ -69,7 +72,7 @@ export function parseGitHubUrl(raw) {
     subpath: branchIdx >= 0 ? parts.slice(branchIdx + 2).join('/') : '',
   }
 }
-
+// Helper function to fetch JSON data from the GitHub API with rate limit tracking and error handling
 async function githubJson(url, metrics) {
   metrics.apiCalls += 1
   const started = performance.now()
@@ -82,7 +85,7 @@ async function githubJson(url, metrics) {
   metrics.githubMs += performance.now() - started
   metrics.rateLimitRemaining = response.headers.get('x-ratelimit-remaining')
   metrics.rateLimitReset = response.headers.get('x-ratelimit-reset')
-
+  // Handle specific HTTP status codes for GitHub API responses
   if (response.status === 403) {
     throw new Error('GitHub rate limit reached. Try again later.')
   }
@@ -96,6 +99,7 @@ async function githubJson(url, metrics) {
   return response.json()
 }
 
+//
 async function githubText(url, metrics) {
   metrics.apiCalls += 1
   const started = performance.now()
@@ -141,12 +145,14 @@ function buildTree(paths) {
   return root
 }
 
+// Load Repository
 export async function loadRepository(repoUrl) {
   const started = performance.now()
   const metrics = { apiCalls: 0, githubMs: 0, rateLimitRemaining: null, rateLimitReset: null }
   const { owner, repo, branch: urlBranch, subpath } = parseGitHubUrl(repoUrl)
   const repoInfo = await githubJson(`https://api.github.com/repos/${owner}/${repo}`, metrics)
 
+  // If error with repo
   if (repoInfo.private) throw new Error('Private repositories are not supported. Only public repos can be loaded.')
   if (repoInfo.disabled) throw new Error('This repository has been disabled on GitHub.')
   if (repoInfo.size > MAX_REPO_SIZE_KB) {
@@ -158,7 +164,7 @@ export async function loadRepository(repoUrl) {
     `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
     metrics,
   )
-
+  // Filter the paths
   let paths = treeData.tree
     .filter((entry) => entry.type === 'blob' && !shouldIgnore(entry.path) && !isBinary(entry.path))
     .map((entry) => entry.path)

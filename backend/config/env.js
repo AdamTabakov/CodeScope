@@ -1,6 +1,9 @@
+// Load environment variables from .env file
+
 import dotenv from 'dotenv'
 dotenv.config()
 
+// Configuration object for the application
 export const config = {
   port: process.env.PORT || 3000,
   jwtSecret: process.env.JWT_SECRET || 'dev-only-change-this-secret-before-deploy',
@@ -13,4 +16,7 @@ export const config = {
   mongoUri: process.env.MONGODB_URI || '',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   openaiModel: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+  appUrl: process.env.APP_URL || 'http://localhost:3000',
+  resendApiKey: process.env.RESEND_API_KEY || '',
+  emailFrom: process.env.EMAIL_FROM || 'CodeScope <no-reply@codescope.local>',
 }

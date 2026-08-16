@@ -1,5 +1,6 @@
 import { config } from '../config/env.js'
 
+// System Prompt
 const SYSTEM_PROMPT = `You are CodeScope's repository assistant.
 
 Non-negotiable rules:
@@ -11,7 +12,9 @@ Non-negotiable rules:
 - If context is insufficient, say exactly what is missing and give the most useful next step.
 - Keep answers concise, technical, and directly responsive.`
 
+// Generate a snapshot of the repository context
 function repoSnapshot(context = {}) {
+  // Use optional chaining and nullish coalescing to safely access context properties
   const metrics = context.metrics ?? {}
   const files = Array.isArray(context.files) ? context.files : []
   const fileSummaries = files
@@ -19,6 +22,7 @@ function repoSnapshot(context = {}) {
     .map((file) => `- ${file.path} (${file.language ?? 'Other'}, ${file.lineCount ?? 0} LOC)`)
     .join('\n')
 
+  // Return a formatted string summarizing the repository context
   return [
     `Repository: ${context.repo ?? 'unknown'}`,
     `Branch: ${context.branch ?? 'unknown'}`,
@@ -32,6 +36,7 @@ function repoSnapshot(context = {}) {
   ].join('\n\n')
 }
 
+// Fallback answer when OpenAI API key is not set
 function fallbackAnswer(message, context = {}) {
   const metrics = context.metrics ?? {}
   const languages = Array.isArray(metrics.languages) ? metrics.languages.join(', ') : 'Unknown'
@@ -57,9 +62,13 @@ function fallbackAnswer(message, context = {}) {
   ].join('\n')
 }
 
-export async function answerCodeQuestion(message, context) {
+export async function streamAnswerCodeQuestion(message, context, onDelta, onDone) {
   if (!config.openaiApiKey) {
-    return { reply: fallbackAnswer(message, context), model: 'codescope-local-fallback' }
+    // No API key — send the deterministic fallback as a single delta so the
+    // client renders it through the same streaming path.
+    onDelta(fallbackAnswer(message, context))
+    onDone({ model: 'codescope-local-fallback' })
+    return
   }
 
   const response = await fetch('https://api.openai.com/v1/responses', {
@@ -73,6 +82,7 @@ export async function answerCodeQuestion(message, context) {
       temperature: 0.1,
       max_output_tokens: 700,
       store: false,
+      stream: true,
       instructions: SYSTEM_PROMPT,
       input: [
         {
@@ -88,14 +98,60 @@ export async function answerCodeQuestion(message, context) {
     }),
   })
 
+  // Check for errors in the OpenAI API response
   if (!response.ok) {
     const body = await response.text()
     throw new Error(`OpenAI request failed (${response.status}): ${body.slice(0, 200)}`)
   }
 
-  const data = await response.json()
-  return {
-    reply: data.output_text || fallbackAnswer(message, context),
-    model: data.model || config.openaiModel,
+  // Forward each text delta to the client and report the resolved model when
+  // the stream completes.
+  let model = config.openaiModel
+  await streamOpenAiSse(response.body, (event, data) => {
+    if (event === 'response.output_text.delta' && data && typeof data.delta === 'string') {
+      onDelta(data.delta)
+    } else if (event === 'response.completed' && data?.response?.model) {
+      model = data.response.model
+    }
+  })
+  onDone({ model })
+}
+
+// Reads an OpenAI streaming response body and invokes callback(event, data)
+// for every SSE event block.
+async function streamOpenAiSse(body, onEvent) {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    let sep
+    while ((sep = buffer.indexOf('\n\n')) !== -1) {
+      const block = buffer.slice(0, sep)
+      buffer = buffer.slice(sep + 2)
+      const { event, data } = parseSseBlock(block)
+      if (event || data) onEvent(event, data)
+    }
   }
+
+  const { event, data } = parseSseBlock(buffer)
+  if (event || data) onEvent(event, data)
+}
+
+function parseSseBlock(block) {
+  let event = null
+  let data = null
+  for (const line of block.replace(/\r/g, '').split('\n')) {
+    if (line.startsWith('event:')) event = line.slice(6).trim()
+    else if (line.startsWith('data:')) {
+      const raw = line.slice(5).trim()
+      if (raw === '[DONE]') continue
+      try { data = JSON.parse(raw) } catch { /* ignore malformed */ }
+    }
+  }
+  return { event, data }
 }

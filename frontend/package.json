@@ -10,9 +10,6 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^6.0.3",
-    "axios": "^1.7.7",
-    "jszip": "^3.10.1",
-    "lucide-react": "^1.31.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "vite": "^8.1.1"

@@ -1,5 +1,6 @@
 import express from 'express'
 import helmet from 'helmet'
+import compression from 'compression'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import apiRouter from './routes/api.js'
@@ -23,6 +24,14 @@ app.use((request, response, next) => {
   next()
 })
 
+// Chrome DevTools sends a harmless "Automatic Workspace Folders" probe to this
+// well-known path on localhost. We answer it with 204 so the request doesn't
+// surface as a CSP violation / 404 in the console. See:
+// https://developer.chrome.com/docs/devtools/automatic-workspaces
+app.use('/.well-known/appspecific/com.chrome.devtools.json', (_request, response) => {
+  response.status(204).end()
+})
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -30,15 +39,49 @@ app.use(
 )
 app.use(express.json({ limit: '256kb', strict: true }))
 
+// gzip-compress responses. Server-Sent Events must never be compressed (it
+// buffers the stream and breaks token delivery), so the chat stream is excluded.
+app.use(
+  compression({
+    threshold: 1024,
+    filter: (request, response) => {
+      if (request.path === '/api/chat') return false
+      const type = String(response.getHeader('Content-Type') || '')
+      if (type.includes('text/event-stream')) return false
+      return true
+    },
+  }),
+)
+
 app.use('/api', apiRouter)
 
 // Return JSON 404 for any /api/* path that didn't match a route
 // (must come before the static-file handler, which would otherwise serve index.html)
 app.use('/api', apiNotFound)
 
-app.use(express.static(frontendDist))
+// Static assets with cache headers:
+//  - hashed build files under /assets/ are content-addressed → immutable
+//  - brand images (favicon, og-image) are stable but may change → short cache
+//  - everything else is revalidated (no-cache)
+app.use(
+  express.static(frontendDist, {
+    index: false,
+    setHeaders(response, filePath) {
+      const rel = path.relative(frontendDist, filePath).replace(/\\/g, '/')
+      const ext = path.extname(filePath).toLowerCase()
+      if (rel.startsWith('assets/')) {
+        response.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      } else if (['.png', '.svg', '.ico', '.jpg', '.jpeg', '.webp', '.avif'].includes(ext)) {
+        response.setHeader('Cache-Control', 'public, max-age=86400')
+      } else {
+        response.setHeader('Cache-Control', 'no-cache')
+      }
+    },
+  }),
+)
 
 app.get('*splat', (_request, response) => {
+  response.setHeader('Cache-Control', 'no-cache')
   response.sendFile(path.join(frontendDist, 'index.html'))
 })
 

@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit'
 import { loadRepository } from '../services/repositoryService.js'
 
+// Rate limiter for repository uploads to prevent abuse
 export const repositoryLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
@@ -9,6 +10,7 @@ export const repositoryLimiter = rateLimit({
   message: { error: 'Too many repository uploads. Please wait before loading another repo.' },
 })
 
+// Controller for handling repository uploads
 export async function uploadRepository(req, res, next) {
   try {
     const result = await loadRepository(req.body?.url)

@@ -1,4 +1,31 @@
-import { Crown, GitBranch, FileCode2, Clock, ArrowRight } from 'lucide-react'
+const IconCrown = () => (
+  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 7l5 4 5-6 5 6 5-4-1 12H3z" />
+    <path d="M3 21h18" />
+  </svg>
+)
+const IconFile = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="8" y1="13" x2="16" y2="13" />
+    <line x1="8" y1="17" x2="13" y2="17" />
+  </svg>
+)
+const IconClock = () => (
+  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+)
+const IconBranch = () => (
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="6" y1="3" x2="6" y2="15" />
+    <circle cx="18" cy="6" r="3" />
+    <circle cx="6" cy="18" r="3" />
+    <path d="M18 9a9 9 0 0 1-9 9" />
+  </svg>
+)
 
 const PLACEHOLDER_SCANS = [
   { id: 1, file: 'src/api/payments.js', score: 'B', lang: 'JS', ago: '2 hours ago' },
@@ -23,7 +50,7 @@ export default function Dashboard({ user, onSignOut, openLegal, navigate }) {
           Welcome back, {user?.username}
           {isAdmin && (
             <span className="admin-badge">
-              <Crown size={12} strokeWidth={2} />
+              <IconCrown />
               Admin
             </span>
           )}
@@ -69,14 +96,14 @@ export default function Dashboard({ user, onSignOut, openLegal, navigate }) {
               className="stat-card"
               style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem' }}
             >
-              <FileCode2 size={18} style={{ color: 'var(--muted)', flexShrink: 0 }} />
+              <IconFile />
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {scan.file}
               </span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--muted)', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>
                 {scan.lang}
               </span>
-              <Clock size={13} style={{ color: 'var(--muted)', flexShrink: 0 }} />
+              <IconClock />
               <span style={{ fontSize: '0.78rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{scan.ago}</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.875rem', color: SCORE_COLORS[scan.score] ?? 'var(--text)', minWidth: '1.5rem', textAlign: 'right' }}>
                 {scan.score}
@@ -89,9 +116,8 @@ export default function Dashboard({ user, onSignOut, openLegal, navigate }) {
       {/* Actions */}
       <div className="dashboard-actions fade-in-up fade-in-up--4">
         <button className="btn btn--primary" type="button" onClick={() => navigate('scan')}>
-          <GitBranch size={15} />
+          <IconBranch />
           New scan
-          <ArrowRight size={14} />
         </button>
         <button className="btn btn--ghost" type="button" onClick={onSignOut}>
           Sign out

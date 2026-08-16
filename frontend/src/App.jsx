@@ -1,19 +1,39 @@
-import { useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Navbar from './components/Navbar.jsx'
 import LegalModal from './components/LegalModal.jsx'
+import LoadingBar from './components/LoadingBar.jsx'
+import CookieBanner from './components/CookieBanner.jsx'
 import Home from './pages/Home.jsx'
-import Login from './pages/Login.jsx'
-import Signup from './pages/Signup.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import Scan from './pages/Scan.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
+import { VIEW_META } from './meta.js'
+
+// Non-landing pages are code-split and fetched on first navigation so the
+// initial bundle stays small (Home and ErrorPage stay eager: Home is the
+// landing page, ErrorPage is needed synchronously by the ErrorBoundary).
+const Login = lazy(() => import('./pages/Login.jsx'))
+const Signup = lazy(() => import('./pages/Signup.jsx'))
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
+const Scan = lazy(() => import('./pages/Scan.jsx'))
 
 // Views that require the user to be signed in
 const AUTH_REQUIRED = new Set(['dashboard', 'scan'])
 
 // All known views — anything else gets a 404
 const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error'])
+
+// Short human labels used when composing error-page <title>s.
+const ERROR_LABELS = {
+  404: 'Page not found',
+  401: 'Sign in required',
+  403: 'Access denied',
+  429: 'Too many requests',
+  500: 'Internal server error',
+  503: 'Service unavailable',
+  offline: 'No network connection',
+  crash: 'Application crashed',
+}
+const viewLabel = (type) => ERROR_LABELS[type] ?? 'Something went wrong'
 
 export default function App() {
   const [view, setView] = useState('home')
@@ -28,6 +48,33 @@ export default function App() {
       return []
     }
   })
+  const [loading, setLoading] = useState(true)
+
+  // Keep <head> metadata (title + description) in sync with the active view.
+  useEffect(() => {
+    const meta =
+      view === 'error' && errorState.type
+        ? {
+            ...VIEW_META.error,
+            title: `${errorState.type} | ${viewLabel(errorState.type)} | CodeScope`,
+          }
+        : VIEW_META[view] ?? VIEW_META.home
+
+    document.title = meta.title
+    let desc = document.querySelector('meta[name="description"]')
+    if (!desc) {
+      desc = document.createElement('meta')
+      desc.name = 'description'
+      document.head.appendChild(desc)
+    }
+    desc.content = meta.description
+  }, [view, errorState])
+
+  // Simulated boot loader so the app never flashes unstyled content.
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(timer)
+  }, [])
 
   const navigate = (target, opts = {}) => {
     if (!KNOWN_VIEWS.has(target)) {
@@ -157,6 +204,7 @@ export default function App() {
 
   return (
     <ErrorBoundary navigate={navigate}>
+      <LoadingBar active={loading} />
       <Navbar
         navigate={navigate}
         user={auth.user}
@@ -164,7 +212,8 @@ export default function App() {
         openLegal={openLegal}
         currentView={view}
       />
-      {renderPage()}
+      {loading ? null : <Suspense fallback={null}>{renderPage()}</Suspense>}
+      <CookieBanner openLegal={openLegal} />
       <LegalModal page={legalPage} onClose={closeLegal} />
     </ErrorBoundary>
   )

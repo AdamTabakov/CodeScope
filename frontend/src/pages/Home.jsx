@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Shield, ScanSearch, Zap } from 'lucide-react'
 
 // ── Code snippets ──────────────────────────────────────────────────────────────
 // Each line is an array of { t: text, c: CSS-class } tokens.
@@ -299,17 +298,14 @@ const SNIPPETS = [
 
 const FEATURES = [
   {
-    Icon: ScanSearch,
     title: 'Smart Analysis',
-    desc: 'Traces behavior across the entire codebase — not just the file you paste.',
+    desc: 'Traces behavior across the entire codebase. Not just the file you paste.',
   },
   {
-    Icon: Shield,
     title: 'Issue Detection',
     desc: 'Surfaces injection risks, missing guards, unverified tokens, and logic gaps.',
   },
   {
-    Icon: Zap,
     title: 'Instant Scores',
     desc: 'Complexity scores with the exact functions and loops that drive them up.',
   },
@@ -383,7 +379,6 @@ export default function Home({ navigate, openLegal }) {
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="hero">
         <div className="hero-badge">
-          <span className="hero-badge-star">✦</span>
           AI-powered code diagnostics
         </div>
 
@@ -394,13 +389,12 @@ export default function Home({ navigate, openLegal }) {
 
         <p className="hero-lead">
           CodeScope reads your repo, explains behavior in plain English, flags real risks, and
-          scores complexity — without any rulebook setup.
+          scores complexity, without any rulebook setup.
         </p>
 
         <div className="hero-actions">
           <button className="btn btn--primary" onClick={() => navigate('signup')}>
             Get started free
-            <ArrowRight size={16} />
           </button>
           <button className="btn btn--ghost" onClick={() => navigate('login')}>
             Sign in
@@ -452,11 +446,8 @@ export default function Home({ navigate, openLegal }) {
       {/* ── Features ─────────────────────────────────────────────────── */}
       <section className="features">
         <div className="features-grid">
-          {FEATURES.map(({ Icon, title, desc }) => (
-            <article className="feature-card fade-in-up" key={title}>
-              <span className="feature-icon">
-                <Icon size={28} strokeWidth={1.5} />
-              </span>
+          {FEATURES.map(({ title, desc }) => (
+            <article className="feature-card" key={title}>
               <h3 className="feature-title">{title}</h3>
               <p className="feature-desc">{desc}</p>
             </article>

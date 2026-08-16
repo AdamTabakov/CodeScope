@@ -1,0 +1,35 @@
+// Per-view <head> metadata used to keep titles + descriptions accurate
+// across the state-driven SPA. Keyed by the same names used in App's
+// KNOWN_VIEWS / navigate().
+export const VIEW_META = {
+  home: {
+    title: 'CodeScope | Code scanning in plain English',
+    description:
+      'CodeScope reads code or repositories, explains behavior in plain English, flags issues, and scores complexity.',
+  },
+  login: {
+    title: 'Sign in | CodeScope',
+    description:
+      'Sign in to your CodeScope account to scan repositories, view complexity scores, and track flagged issues.',
+  },
+  signup: {
+    title: 'Get started free | CodeScope',
+    description:
+      'Create a free CodeScope account and start understanding any codebase in plain English.',
+  },
+  dashboard: {
+    title: 'Dashboard | CodeScope',
+    description:
+      'Your CodeScope dashboard. Review recent repository scans, scores, and flagged issues.',
+  },
+  scan: {
+    title: 'Scan a repository | CodeScope',
+    description:
+      'Scan any GitHub repository with CodeScope to get a plain-English explanation, issue flags, and a complexity score.',
+  },
+  error: {
+    title: 'Something went wrong | CodeScope',
+    description:
+      'CodeScope hit an error. Try again, or head back to the homepage to scan a repository.',
+  },
+}

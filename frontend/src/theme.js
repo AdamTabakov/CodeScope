@@ -1,0 +1,31 @@
+const STORAGE_KEY = 'codescope:theme'
+
+export function getTheme() {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {
+    /* storage unavailable */
+  }
+  // Fall back to the OS preference, defaulting to dark.
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark'
+}
+
+export function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme
+}
+
+export function setTheme(theme) {
+  applyTheme(theme)
+  try {
+    window.localStorage.setItem(STORAGE_KEY, theme)
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function initTheme() {
+  applyTheme(getTheme())
+}

@@ -1,6 +1,37 @@
 import { useState } from 'react'
-import { ChevronLeft, AlertCircle, Loader, Eye, EyeOff } from 'lucide-react'
 import { signup } from '../services/api.js'
+
+const IconBack = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+)
+const IconAlert = ({ size = 15 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
+  </svg>
+)
+const IconEye = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+const IconEyeOff = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+)
+const IconSpinner = () => (
+  <svg className="spin" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" opacity="0.25" />
+    <path d="M12 2a10 10 0 0 1 10 10" />
+  </svg>
+)
 
 const usernamePattern = /^[A-Za-z][A-Za-z0-9_-]{2,31}$/
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -82,7 +113,7 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
     <div className="auth-page">
       <div className="auth-card auth-card--wide fade-in-up">
         <button className="auth-back" onClick={() => navigate('home')} type="button">
-          <ChevronLeft size={16} />
+          <IconBack />
           Back
         </button>
 
@@ -113,7 +144,7 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
               />
             </div>
             {fieldErrors.username && (
-              <span className="field-error"><AlertCircle size={12} />{fieldErrors.username}</span>
+              <span className="field-error"><IconAlert size={12} />{fieldErrors.username}</span>
             )}
           </div>
 
@@ -135,7 +166,7 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
               />
             </div>
             {fieldErrors.email && (
-              <span className="field-error"><AlertCircle size={12} />{fieldErrors.email}</span>
+              <span className="field-error"><IconAlert size={12} />{fieldErrors.email}</span>
             )}
           </div>
 
@@ -162,11 +193,11 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
                 onClick={() => setShowPw((v) => !v)}
                 aria-label={showPw ? 'Hide password' : 'Show password'}
               >
-                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPw ? <IconEyeOff /> : <IconEye />}
               </button>
             </div>
             {fieldErrors.password && (
-              <span className="field-error"><AlertCircle size={12} />{fieldErrors.password}</span>
+              <span className="field-error"><IconAlert size={12} />{fieldErrors.password}</span>
             )}
           </div>
 
@@ -193,11 +224,11 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
                 onClick={() => setShowConfirm((v) => !v)}
                 aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
               >
-                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showConfirm ? <IconEyeOff /> : <IconEye />}
               </button>
             </div>
             {fieldErrors.confirmPassword && (
-              <span className="field-error"><AlertCircle size={12} />{fieldErrors.confirmPassword}</span>
+              <span className="field-error"><IconAlert size={12} />{fieldErrors.confirmPassword}</span>
             )}
           </div>
 
@@ -227,7 +258,7 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
 
           {serverError && (
             <div className="auth-error">
-              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+              <IconAlert />
               {serverError}
             </div>
           )}
@@ -238,7 +269,7 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
             disabled={loading}
           >
             {loading ? (
-              <><Loader size={15} className="spin" />Creating account&hellip;</>
+              <><IconSpinner />Creating account&hellip;</>
             ) : (
               'Create account'
             )}

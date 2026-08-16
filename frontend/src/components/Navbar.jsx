@@ -1,4 +1,4 @@
-import { Crown } from 'lucide-react'
+import ThemeToggle from './ThemeToggle.jsx'
 
 export default function Navbar({ navigate, user, onSignOut, openLegal, currentView }) {
   return (
@@ -32,23 +32,11 @@ export default function Navbar({ navigate, user, onSignOut, openLegal, currentVi
       )}
 
       <div className="navbar__actions">
+        <ThemeToggle />
         {user ? (
           <>
             <span className="navbar__user">
               <span className="navbar__username">
-                {user.role === 'admin' && (
-                  <Crown
-                    size={13}
-                    aria-label="Admin"
-                    title="Admin"
-                    style={{
-                      color: '#fbbf24',
-                      filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.45))',
-                      marginRight: '0.2rem',
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
                 {user.username}
               </span>
             </span>

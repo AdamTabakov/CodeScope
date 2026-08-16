@@ -1,6 +1,24 @@
 import { useState } from 'react'
-import { ChevronLeft, AlertCircle, Loader } from 'lucide-react'
 import { login } from '../services/api.js'
+
+const IconBack = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+)
+const IconAlert = () => (
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
+  </svg>
+)
+const IconSpinner = () => (
+  <svg className="spin" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" opacity="0.25" />
+    <path d="M12 2a10 10 0 0 1 10 10" />
+  </svg>
+)
 
 const identifierPattern = /^([A-Za-z][A-Za-z0-9_-]{2,31}|[^\s@]+@[^\s@]+\.[^\s@]{2,})$/
 
@@ -38,7 +56,7 @@ export default function Login({ navigate, onAuthSuccess, openLegal }) {
     <div className="auth-page">
       <div className="auth-card fade-in-up">
         <button className="auth-back" onClick={() => navigate('home')} type="button">
-          <ChevronLeft size={16} />
+          <IconBack />
           Back
         </button>
 
@@ -91,14 +109,14 @@ export default function Login({ navigate, onAuthSuccess, openLegal }) {
 
           {error && (
             <div className="auth-error">
-              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+              <IconAlert />
               {error}
             </div>
           )}
 
           <button className="btn btn--primary btn--full" type="submit" disabled={loading}>
             {loading ? (
-              <><Loader size={15} className="spin" />Verifying&hellip;</>
+              <><IconSpinner />Verifying&hellip;</>
             ) : (
               'Sign in'
             )}

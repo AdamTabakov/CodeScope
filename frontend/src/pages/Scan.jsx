@@ -1,18 +1,36 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ChevronLeft,
-  GitBranch,
-  FolderOpen,
-  Folder,
-  FileCode2,
-  AlertCircle,
-  Loader,
-  ExternalLink,
-  MessageSquare,
-  Send,
-  X,
-  TriangleAlert,
-} from 'lucide-react'
+import { streamChat } from '../services/api.js'
+
+// ── Inline icons (no icon library) ───────────────────────────────────────────
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: '2',
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': 'true',
+}
+const IconBack = ({ size = 15 }) => <svg {...iconProps} width={size} height={size}><polyline points="15 18 9 12 15 6" /></svg>
+const IconBranch = ({ size = 14, className }) => (
+  <svg {...iconProps} width={size} height={size} className={className}>
+    <line x1="6" y1="3" x2="6" y2="15" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" />
+  </svg>
+)
+const IconFolder = () => <svg {...iconProps} width={13} height={13}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
+const IconFolderOpen = () => <svg {...iconProps} width={13} height={13}><path d="M6 17l-4-9 5 0 2-3h7l2 4-10 0z" /><path d="M22 17l-4-9-4 0" /></svg>
+const IconFile = () => <svg {...iconProps} width={13} height={13}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+const IconAlert = ({ size = 13 }) => <svg {...iconProps} width={size} height={size}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+const IconWarning = ({ size = 12 }) => <svg {...iconProps} width={size} height={size}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+const IconLink = ({ size = 12 }) => <svg {...iconProps} width={size} height={size}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+const IconChat = ({ size = 16 }) => <svg {...iconProps} width={size} height={size}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+const IconSend = ({ size = 14 }) => <svg {...iconProps} width={size} height={size}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+const IconClose = ({ size = 14 }) => <svg {...iconProps} width={size} height={size}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+const IconSpinner = ({ size = 14 }) => (
+  <svg className="spin" {...iconProps} width={size} height={size}>
+    <circle cx="12" cy="12" r="10" opacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" />
+  </svg>
+)
 
 // ── Safety constants ──────────────────────────────────────────────────────────
 
@@ -146,9 +164,9 @@ function TreeNode({ node, depth, selected, expanded, onSelect, onToggle }) {
         <span className="scan-tree-node__icon">
           {isFolder
             ? isOpen
-              ? <FolderOpen size={13} />
-              : <Folder size={13} />
-            : <FileCode2 size={13} />}
+              ? <IconFolderOpen />
+              : <IconFolder />
+            : <IconFile />}
         </span>
         <span className="scan-tree-node__name">{node.name}</span>
       </button>
@@ -213,7 +231,7 @@ export default function Scan({ navigate, user, token }) {
       setMessages([{
         id: Date.now(),
         role: 'assistant',
-        content: "Hi! I'm your Code Assistant. Open a repository and select a file — then ask me anything about the code. I can explain behaviour, flag potential issues, suggest improvements, or walk through the logic with you.",
+        content: "Hi! I'm your Code Assistant. Open a repository and select a file. Then ask me anything about the code. I can explain behaviour, flag potential issues, suggest improvements, or walk through the logic with you.",
         file: null,
       }])
     }
@@ -240,19 +258,12 @@ export default function Scan({ navigate, user, token }) {
     }
   }
 
-  const requestAssistant = async ({ message, context }) => {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token,
-      },
-      body: JSON.stringify({ message, context }),
-    })
+const patchMessage = (id, updater) =>
+    setMessages((prev) => prev.map((m) => (m.id === id ? updater(m) : m)))
 
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
-    return data.reply
+  const requestAssistant = async ({ message, context, onDelta }) => {
+    const reply = await streamChat({ message, context, token, onDelta })
+    return reply
   }
 
   const handleSubmitLegacy = async (e) => {
@@ -288,7 +299,7 @@ export default function Scan({ navigate, user, token }) {
         newWarnings.push('This repository is archived and no longer actively maintained.')
       }
       if (repoInfo.size > 50 * 1024) {
-        newWarnings.push(`Large repository (${Math.round(repoInfo.size / 1024)}MB) — loading may be slow.`)
+        newWarnings.push(`Large repository (${Math.round(repoInfo.size / 1024)}MB). Loading may be slow.`)
       }
 
       const branch = urlBranch || repoInfo.default_branch || 'main'
@@ -366,8 +377,11 @@ export default function Scan({ navigate, user, token }) {
         message: `${data.metrics.filesRetrieved} files / ${data.metrics.linesOfCode} LOC from ${data.meta.fullName} - ${data.meta.branch}`,
       })
 
-      setChatOpen(true)
+setChatOpen(true)
       setChatLoading(true)
+      const summaryId = Date.now()
+      setMessages([{ id: summaryId, role: 'assistant', content: '', file: null }])
+      chatHasOpened.current = true
       try {
         const summary = await requestAssistant({
           message: 'Summarize this repository. Focus on purpose, structure, languages, notable files, and what I should inspect first.',
@@ -377,22 +391,15 @@ export default function Scan({ navigate, user, token }) {
             metrics: data.metrics,
             selectedPath: paths[0] ?? '',
           }),
+          onDelta: (delta) =>
+            patchMessage(summaryId, (m) => ({ ...m, content: m.content + delta })),
         })
-        setMessages([{
-          id: Date.now(),
-          role: 'assistant',
-          content: summary,
-          file: null,
-        }])
-        chatHasOpened.current = true
+        patchMessage(summaryId, (m) => ({ ...m, content: summary }))
       } catch {
-        setMessages([{
-          id: Date.now(),
-          role: 'assistant',
+        patchMessage(summaryId, (m) => ({
+          ...m,
           content: `${data.meta.fullName} loaded with ${data.metrics.filesRetrieved} files, ${data.metrics.linesOfCode} LOC, and these languages: ${data.metrics.languages.join(', ')}. Ask about architecture, bugs, tests, security, or a selected file.`,
-          file: null,
-        }])
-        chatHasOpened.current = true
+        }))
       } finally {
         setChatLoading(false)
       }
@@ -428,30 +435,27 @@ export default function Scan({ navigate, user, token }) {
   const sendMessage = async (content) => {
     if (!content.trim() || chatLoading || !token) return
 
-    const userMsg = { id: Date.now(), role: 'user', content: content.trim(), file: selectedPath }
+const userMsg = { id: Date.now(), role: 'user', content: content.trim(), file: selectedPath }
     setMessages((prev) => [...prev, userMsg])
     setChatInput('')
     setChatLoading(true)
+
+    const assistantId = Date.now() + 1
+    setMessages((prev) => [...prev, { id: assistantId, role: 'assistant', content: '', file: selectedPath }])
 
     try {
       const reply = await requestAssistant({
         message: content.trim(),
         context: buildChatContext(),
+        onDelta: (delta) =>
+          patchMessage(assistantId, (m) => ({ ...m, content: m.content + delta })),
       })
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, role: 'assistant', content: reply, file: selectedPath },
-      ])
+      patchMessage(assistantId, (m) => ({ ...m, content: reply }))
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: "I couldn't connect to the analysis service. Make sure you're logged in and the backend is running.",
-          file: selectedPath,
-        },
-      ])
+      patchMessage(assistantId, (m) => ({
+        ...m,
+        content: "I couldn't connect to the analysis service. Make sure you're logged in and the backend is running.",
+      }))
     } finally {
       setChatLoading(false)
     }
@@ -472,13 +476,13 @@ export default function Scan({ navigate, user, token }) {
       {/* ── Top bar ─────────────────────────────────────────────────── */}
       <div className="scan-topbar">
         <button type="button" className="scan-back" onClick={() => navigate('dashboard')}>
-          <ChevronLeft size={15} />
+          <IconBack />
           Dashboard
         </button>
 
         <form className="scan-url-form" onSubmit={handleSubmit}>
           <div className="scan-url-wrap">
-            <GitBranch size={14} className="scan-url-icon" />
+            <IconBranch size={14} className="scan-url-icon" />
             <input
               className="scan-url-input"
               type="text"
@@ -498,7 +502,7 @@ export default function Scan({ navigate, user, token }) {
             style={{ fontSize: '0.8125rem', padding: '0.45rem 1.1rem', whiteSpace: 'nowrap' }}
           >
             {status.state === 'loading'
-              ? <><Loader size={13} className="spin" /> Loading…</>
+              ? <><IconSpinner size={13} /> Loading…</>
               : 'Open repo'}
           </button>
         </form>
@@ -511,7 +515,7 @@ export default function Scan({ navigate, user, token }) {
           title="Code Assistant"
           aria-label="Toggle code assistant"
         >
-          <MessageSquare size={16} />
+          <IconChat />
           {hasAssistantMessages && !chatOpen && <span className="scan-chat-badge" />}
         </button>
       </div>
@@ -519,8 +523,8 @@ export default function Scan({ navigate, user, token }) {
       {/* ── Status bar ──────────────────────────────────────────────── */}
       {status.message && (
         <div className={`scan-status scan-status--${status.state}`}>
-          {status.state === 'error' && <AlertCircle size={13} style={{ flexShrink: 0 }} />}
-          {status.state === 'loading' && <Loader size={13} className="spin" style={{ flexShrink: 0 }} />}
+          {status.state === 'error' && <IconAlert />}
+          {status.state === 'loading' && <IconSpinner />}
           <span>{status.message}</span>
           {status.state === 'success' && meta && (
             <a
@@ -529,7 +533,7 @@ export default function Scan({ navigate, user, token }) {
               rel="noopener noreferrer"
               className="scan-gh-link"
             >
-              <ExternalLink size={12} />
+              <IconLink />
               GitHub
             </a>
           )}
@@ -541,7 +545,7 @@ export default function Scan({ navigate, user, token }) {
         <div className="scan-warnings">
           {warnings.map((w, i) => (
             <div key={i} className="scan-warning">
-              <TriangleAlert size={12} style={{ flexShrink: 0 }} />
+              <IconWarning />
               {w}
             </div>
           ))}
@@ -574,7 +578,7 @@ export default function Scan({ navigate, user, token }) {
             ))
           ) : (
             <div className="scan-tree-empty">
-              <GitBranch size={28} strokeWidth={1.2} />
+              <IconBranch size={28} />
               <p>Paste a public GitHub repo URL above to browse its files.</p>
             </div>
           )}
@@ -584,14 +588,14 @@ export default function Scan({ navigate, user, token }) {
         <div className="scan-viewer">
           {selectedPath && (
             <div className="scan-viewer__header">
-              <FileCode2 size={13} style={{ flexShrink: 0 }} />
+              <IconFile />
               <span>{selectedPath}</span>
             </div>
           )}
           <pre className="scan-code">
             {fileLoading ? (
               <span className="scan-code-loading">
-                <Loader size={14} className="spin" /> Loading file…
+                <IconSpinner /> Loading file…
               </span>
             ) : fileText ? (
               codeLines.map((line, i) => (
@@ -602,7 +606,7 @@ export default function Scan({ navigate, user, token }) {
               ))
             ) : !tree ? (
               <div className="scan-empty-upload">
-                <GitBranch size={34} strokeWidth={1.4} />
+                <IconBranch size={34} />
                 <h2>Paste a GitHub repository link</h2>
                 <p>Load a public repo to scan its files, generate an initial summary, and ask questions about the code.</p>
                 <form className="scan-empty-upload__form" onSubmit={handleSubmit}>
@@ -623,7 +627,7 @@ export default function Scan({ navigate, user, token }) {
                     disabled={status.state === 'loading' || !url.trim()}
                   >
                     {status.state === 'loading'
-                      ? <><Loader size={15} className="spin" /> Loading...</>
+                      ? <><IconSpinner size={15} /> Loading...</>
                       : 'Scan repo'}
                   </button>
                 </form>
@@ -648,7 +652,7 @@ export default function Scan({ navigate, user, token }) {
                 onClick={() => setChatOpen(false)}
                 aria-label="Close chat"
               >
-                <X size={14} />
+                <IconClose />
               </button>
             </div>
 
@@ -710,7 +714,7 @@ export default function Scan({ navigate, user, token }) {
                 title={!token ? 'Sign in to use the assistant' : 'Send (Ctrl+Enter)'}
                 aria-label="Send message"
               >
-                <Send size={14} />
+                <IconSend />
               </button>
             </div>
             <div className="scan-chat__hint">Ctrl+Enter to send</div>

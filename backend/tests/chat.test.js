@@ -19,6 +19,20 @@ function testToken() {
   )
 }
 
+// Reads an SSE response body and reassembles the deltas + terminal model.
+async function collectSse(response) {
+  const text = await response.text()
+  let reply = ''
+  let model = null
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('data: ')) continue
+    const payload = JSON.parse(line.slice(6))
+    if (typeof payload.delta === 'string') reply += payload.delta
+    if (payload.done) model = payload.model
+  }
+  return { reply, model }
+}
+
 describe('chat api', () => {
   before(async () => {
     server = app.listen(0)
@@ -31,7 +45,7 @@ describe('chat api', () => {
     await new Promise((resolve) => server.close(resolve))
   })
 
-  it('returns a preview assistant response for authenticated repo context', async () => {
+  it('streams a preview assistant response for authenticated repo context', async () => {
     const response = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',
       headers: {
@@ -43,12 +57,13 @@ describe('chat api', () => {
         context: { repo: 'acme/demo', branch: 'main', file: 'src/app.js', code: 'console.log(1)' },
       }),
     })
-    const body = await response.json()
+    const { reply, model } = await collectSse(response)
 
     assert.equal(response.status, 200)
-    assert.equal(body.model, 'codescope-local-fallback')
-    assert.match(body.reply, /acme\/demo/)
-    assert.match(body.reply, /src\/app\.js/)
+    assert.match(response.headers.get('content-type'), /text\/event-stream/)
+    assert.equal(model, 'codescope-local-fallback')
+    assert.match(reply, /acme\/demo/)
+    assert.match(reply, /src\/app\.js/)
   })
 
   it('requires authentication', async () => {

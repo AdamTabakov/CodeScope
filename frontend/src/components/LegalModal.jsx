@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { X } from 'lucide-react'
 
 const EFFECTIVE_DATE = 'August 14, 2026'
 
@@ -18,7 +17,7 @@ const PRIVACY = {
       subsections: [
         {
           label: 'a) Account information',
-          text: 'When you register we collect your chosen username, your email address, and your password. Your password is immediately processed through bcrypt (work factor 12) before it is written to our database — the plain-text password is never stored or logged anywhere in our systems.',
+          text: 'When you register we collect your chosen username, your email address, and your password. Your password is immediately processed through bcrypt (work factor 12) before it is written to our database. The plain-text password is never stored or logged anywhere in our systems.',
         },
         {
           label: 'b) Scan content',
@@ -107,7 +106,7 @@ const TERMS = {
     },
     {
       heading: '9. Termination',
-      body: `Either party may terminate the account relationship at any time. You may delete your account through the account settings. We reserve the right to suspend or terminate any account — with or without notice — that we reasonably believe has violated these Terms, poses a security risk, or is being used fraudulently.\n\nUpon termination, your right to use the Service ceases immediately. Provisions of these Terms that by their nature should survive termination will continue to apply.`,
+      body: `Either party may terminate the account relationship at any time. You may delete your account through the account settings. We reserve the right to suspend or terminate any account, with or without notice, that we reasonably believe has violated these Terms, poses a security risk, or is being used fraudulently.\n\nUpon termination, your right to use the Service ceases immediately. Provisions of these Terms that by their nature should survive termination will continue to apply.`,
     },
     {
       heading: '10. Limitation of Liability',
@@ -199,7 +198,10 @@ export default function LegalModal({ page, onClose }) {
             aria-label="Close"
             onClick={onClose}
           >
-            <X size={18} />
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
