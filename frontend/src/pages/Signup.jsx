@@ -250,9 +250,9 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
               and{' '}
               {legalLink('privacy', 'Privacy Policy')}.
               By creating an account, my username, email address, and a hashed
-              (bcrypt) version of my password will be stored securely on
-              CodeScope&apos;s servers. Code I submit for scanning will also be
-              stored and linked to my account.
+              (bcrypt) version of my password will be stored on CodeScope's
+              servers. Code I submit for scanning will be transmitted to third-party
+              services to produce analysis, but is not stored by CodeScope.
             </span>
           </label>
 
@@ -278,8 +278,8 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
 
         {/* Data notice */}
         <div className="legal-data-notice">
-          <strong>What we store:</strong> username, email, bcrypt-hashed password, and any
-          code you scan. We never store your plain-text password or sell your data.
+          <strong>What we store:</strong> username, email, and bcrypt-hashed password.
+          We never store your plain-text password, sell your data, or store the code you scan.
           Read our{' '}
           <button type="button" className="legal-inline-link" onClick={() => openLegal('privacy')}>
             Privacy Policy

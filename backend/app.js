@@ -2,6 +2,7 @@ import express from 'express'
 import helmet from 'helmet'
 import compression from 'compression'
 import cors from 'cors'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import apiRouter from './routes/api.js'
@@ -11,6 +12,10 @@ import { config } from './config/env.js'
 const app = express()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendDist = path.resolve(__dirname, '../frontend/dist')
+// The backend only serves the built frontend when it is co-located (local dev).
+// In production the frontend is deployed separately (e.g. Cloudflare Pages),
+// so the dist folder is absent and static serving must be skipped entirely.
+const servesFrontend = fs.existsSync(path.join(frontendDist, 'index.html'))
 const healthBody = '{"status":"ok","service":"codescope-homepage"}'
 
 app.disable('x-powered-by')
@@ -80,27 +85,31 @@ app.use('/api', apiNotFound)
 //  - hashed build files under /assets/ are content-addressed → immutable
 //  - brand images (favicon, og-image) are stable but may change → short cache
 //  - everything else is revalidated (no-cache)
-app.use(
-  express.static(frontendDist, {
-    index: false,
-    setHeaders(response, filePath) {
-      const rel = path.relative(frontendDist, filePath).replace(/\\/g, '/')
-      const ext = path.extname(filePath).toLowerCase()
-      if (rel.startsWith('assets/')) {
-        response.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-      } else if (['.png', '.svg', '.ico', '.jpg', '.jpeg', '.webp', '.avif'].includes(ext)) {
-        response.setHeader('Cache-Control', 'public, max-age=86400')
-      } else {
-        response.setHeader('Cache-Control', 'no-cache')
-      }
-    },
-  }),
-)
+// Skipped entirely when the frontend is not co-located (see servesFrontend above).
+if (servesFrontend) {
+  app.use(
+    express.static(frontendDist, {
+      index: false,
+      setHeaders(response, filePath) {
+        const rel = path.relative(frontendDist, filePath).replace(/\\/g, '/')
+        const ext = path.extname(filePath).toLowerCase()
+        if (rel.startsWith('assets/')) {
+          response.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+        } else if (['.png', '.svg', '.ico', '.jpg', '.jpeg', '.webp', '.avif'].includes(ext)) {
+          response.setHeader('Cache-Control', 'public, max-age=86400')
+        } else {
+          response.setHeader('Cache-Control', 'no-cache')
+        }
+      },
+    }),
+  )
 
-app.get('*splat', (_request, response) => {
-  response.setHeader('Cache-Control', 'no-cache')
-  response.sendFile(path.join(frontendDist, 'index.html'))
-})
+  // SPA fallback: serve index.html for any non-API route.
+  app.get('*splat', (_request, response) => {
+    response.setHeader('Cache-Control', 'no-cache')
+    response.sendFile(path.join(frontendDist, 'index.html'))
+  })
+}
 
 app.use(errorHandler)
 

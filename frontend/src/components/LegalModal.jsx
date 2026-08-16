@@ -21,7 +21,7 @@ const PRIVACY = {
         },
         {
           label: 'b) Scan content',
-          text: 'Code snippets, file paths, and repository references you submit for analysis are processed to produce explanations, issue flags, and complexity scores. Scan submissions are stored and linked to your account so you can retrieve results later.\n\nDo not paste secrets, API keys, tokens, database credentials, private keys, or personally identifiable information belonging to other people into scans. Such data would be stored and is not protected by additional encryption beyond our standard database security.',
+          text: 'Code snippets, file paths, and repository references you submit for analysis are transmitted to our servers, processed to produce explanations, issue flags, and complexity scores, and the results are returned to your browser.\n\nTo analyse a repository we fetch it from the public GitHub API, and to generate AI explanations we send the relevant code to the OpenAI API. Both of these are third-party services with their own data handling practices, which we do not control.\n\nScan results are not stored on our servers. They exist only in the memory of your browser session and are lost when you close the page. We do not currently provide a way to retrieve past scans.\n\nDo not paste secrets, API keys, tokens, database credentials, private keys, or personally identifiable information belonging to other people into scans, because that data is transmitted to the third-party services above.',
         },
         {
           label: 'c) Usage and technical data',
@@ -29,13 +29,13 @@ const PRIVACY = {
         },
         {
           label: 'd) Browser and session data',
-          text: 'After you sign in, an authentication token (JWT) is issued and held in your browser\'s session memory. This token contains your user ID, username, and role. It is not written to a cookie or to localStorage; it is cleared automatically when you close the tab or sign out.',
+          text: 'After you sign in, an authentication token (JWT) is issued and held in your browser\'s memory. This token contains your user ID, username, and role. It is not written to a cookie; it is cleared automatically when you close the tab or sign out. We also store a small list of recently scanned repository URLs in your browser\'s localStorage so the "recent scans" list can be shown on your dashboard.',
         },
       ],
     },
     {
       heading: '3. How We Use Your Information',
-      body: `We use the information we collect to:\n\n• Create and authenticate your account\n• Process code you submit and return analysis results\n• Store scan results so you can retrieve and review them\n• Monitor service health and investigate security incidents\n• Send transactional communications (password-reset emails, security alerts)\n• Improve the accuracy and coverage of our analysis engine\n\nWe do not sell, rent, or share your personal information with third parties for advertising or marketing purposes. We do not use your code submissions to train or fine-tune models without your explicit opt-in consent.`,
+      body: `We use the information we collect to:\n\n• Create and authenticate your account\n• Process code you submit and return analysis results\n• Send account verification emails\n• Monitor service health and investigate security incidents\n\nWe do not sell, rent, or share your personal information with third parties for advertising or marketing purposes. We do not use your code submissions to train or fine-tune models.`,
     },
     {
       heading: '4. How We Protect Your Information',
@@ -43,19 +43,19 @@ const PRIVACY = {
     },
     {
       heading: '5. Data Retention',
-      body: `• Account data (username, email, password hash) is retained until you delete your account.\n• Scan results are retained for the lifetime of your account and deleted when you delete your account.\n• Server access logs are retained for up to 90 days for security and abuse-prevention purposes, then purged.\n• Deleted account data is removed from our primary database within 30 days. Backups containing the data are rotated out within 90 days of deletion.`,
+      body: `• Account data (username, email, password hash) is retained for as long as your account exists.\n• Scan results are not stored on our servers, so there is nothing to retain or delete on our end.\n• Server access logs are retained for up to 90 days for security and abuse-prevention purposes, then purged.\n• We do not currently offer a self-service account deletion feature. If you want your account data removed, contact us through whatever contact channel CodeScope makes available at that time, and we will act on your request as required by law.`,
     },
     {
       heading: '6. Your Rights',
-      body: `Depending on your jurisdiction you may have the right to:\n\n• Access the personal data we hold about you\n• Receive a machine-readable copy of your data (data portability)\n• Correct inaccurate data associated with your account\n• Request deletion of your account and all associated personal data\n• Object to certain processing of your data\n\nTo exercise any of these rights, email privacy@codescope.io from the address associated with your account. We will respond within 30 days. For requests from EU residents under the GDPR, we will respond within the legally required timeframe.`,
+      body: `Depending on your jurisdiction you may have rights that include: accessing the personal data we hold about you, receiving a copy of your data, correcting inaccurate data, or requesting deletion of your account and data.\n\nBecause CodeScope does not currently provide a dedicated contact address, we are not yet able to guarantee a response to requests to exercise these rights. We will implement a mechanism for such requests in a future version of the Service. Until then, we do not make any representation that we can process data-subject requests.`,
     },
     {
       heading: '7. Cookies and Tracking',
-      body: `CodeScope does not use advertising cookies, third-party analytics cookies, or tracking pixels. We do not embed third-party scripts that collect behavioural data. The only browser storage we use is in-memory session state (cleared on tab close) to hold your authentication token.`,
+      body: `CodeScope does not use advertising cookies, third-party analytics cookies, or tracking pixels. We do not embed third-party scripts that collect behavioural data. The browser storage we use is in-memory session state (cleared on tab close) to hold your authentication token, plus a small list of recently scanned repository URLs in localStorage.`,
     },
     {
       heading: "8. Children's Privacy",
-      body: `CodeScope is a developer tool intended for users aged 13 and over. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has created an account, contact privacy@codescope.io and we will promptly delete the account.`,
+      body: `CodeScope is a developer tool intended for users aged 13 and over. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has created an account, contact us through whatever contact channel CodeScope makes available at that time, and we will take reasonable steps to delete the account as required by law.`,
     },
     {
       heading: '9. Changes to This Policy',
@@ -82,7 +82,7 @@ const TERMS = {
     },
     {
       heading: '4. Account Responsibility',
-      body: `• You are solely responsible for maintaining the confidentiality of your username and password.\n• You are responsible for all activity that occurs under your account, whether or not authorised by you.\n• You must notify us immediately at security@codescope.io if you suspect any unauthorised access to your account.\n• You may not transfer your account to another person or share your credentials with others.\n• You may not create accounts through automated means or create accounts for other individuals without their explicit consent.`,
+      body: `• You are solely responsible for maintaining the confidentiality of your username and password.\n• You are responsible for all activity that occurs under your account, whether or not authorised by you.\n• You should notify us if you suspect any unauthorised access to your account, through whatever contact channel CodeScope makes available at that time.\n• You may not transfer your account to another person or share your credentials with others.\n• You may not create accounts through automated means or create accounts for other individuals without their explicit consent.`,
     },
     {
       heading: '5. Acceptable Use',
@@ -90,7 +90,7 @@ const TERMS = {
     },
     {
       heading: '6. Scan Content and Your Code',
-      body: `You retain all ownership rights in the code you submit. By submitting code for analysis, you grant CodeScope a limited, non-exclusive, royalty-free licence to process, analyse, store, and display that code solely to provide you with the analysis results.\n\nYou represent and warrant that:\n• You own or are authorised to submit any code you send to CodeScope\n• Your submissions do not violate the intellectual property rights of any third party\n• Your submissions do not contain malware, exploits, or payloads intended to harm our infrastructure\n\nDo not submit code containing secrets, credentials, private keys, personal data of third parties, or any information subject to confidentiality obligations. CodeScope is not responsible for any data contained in scan submissions.`,
+      body: `You retain all ownership rights in the code you submit. By submitting code for analysis, you grant CodeScope a limited, non-exclusive, royalty-free licence to process and analyse that code solely to provide you with the analysis results. CodeScope does not store your submissions or display them to other users.\n\nYou represent and warrant that:\n• You own or are authorised to submit any code you send to CodeScope\n• Your submissions do not violate the intellectual property rights of any third party\n• Your submissions do not contain malware, exploits, or payloads intended to harm our infrastructure\n\nDo not submit code containing secrets, credentials, private keys, personal data of third parties, or any information subject to confidentiality obligations. CodeScope is not responsible for any data contained in scan submissions.`,
     },
     {
       heading: '7. Analysis Results and Disclaimers',
@@ -102,18 +102,22 @@ const TERMS = {
     },
     {
       heading: '9. Termination',
-      body: `Either party may terminate the account relationship at any time. You may delete your account through the account settings. We reserve the right to suspend or terminate any account, with or without notice, that we reasonably believe has violated these Terms, poses a security risk, or is being used fraudulently.\n\nUpon termination, your right to use the Service ceases immediately. Provisions of these Terms that by their nature should survive termination will continue to apply.`,
+      body: `Either party may terminate the account relationship at any time. We reserve the right to suspend or terminate any account, with or without notice, that we reasonably believe has violated these Terms, poses a security risk, or is being used fraudulently. CodeScope does not currently offer a self-service account deletion feature; if you wish to stop using the Service you may simply stop using it.\n\nUpon termination, your right to use the Service ceases immediately. Provisions of these Terms that by their nature should survive termination will continue to apply.`,
     },
     {
       heading: '10. Limitation of Liability',
-      body: `To the maximum extent permitted by applicable law, CodeScope and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation loss of profits, data, or business opportunities, arising out of or related to your use of or inability to use the Service.\n\nIn no event shall our total liability for all claims relating to the Service exceed the amount you paid us (if any) in the twelve months preceding the claim.`,
+      body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL CODESCOPE OR ITS OPERATORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION LOSS OF PROFITS, DATA, REVENUE, GOODWILL, OR BUSINESS OPPORTUNITIES, ARISING OUT OF OR RELATED TO YOUR USE OF OR INABILITY TO USE THE SERVICE, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.\n\nIN NO EVENT SHALL OUR TOTAL CUMULATIVE LIABILITY FOR ALL CLAIMS ARISING OUT OF OR RELATED TO THE SERVICE, WHETHER IN CONTRACT, TORT, OR OTHERWISE, EXCEED THE GREATER OF (i) THE AMOUNT YOU PAID US (IF ANY) IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM, OR (ii) ONE HUNDRED DOLLARS ($100).\n\nTHE FOREGOING LIMITATIONS APPLY EVEN IF ANY REMEDY SET FORTH HEREIN FAILS OF ITS ESSENTIAL PURPOSE. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES, SO SOME OF THE ABOVE LIMITATIONS MAY NOT APPLY TO YOU.`,
     },
     {
-      heading: '11. Governing Law and Disputes',
-      body: `These Terms are governed by and construed in accordance with applicable law. Any dispute arising from these Terms or your use of the Service shall first be addressed by contacting legal@codescope.io. If a dispute cannot be resolved informally, both parties agree to submit to the jurisdiction of the relevant courts.`,
+      heading: '11. Disclaimer of Warranties',
+      body: `THE SERVICE, INCLUDING ALL CONTENT, ANALYSIS RESULTS, AND OUTPUT, IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CODESCOPE DISCLAIMS ALL WARRANTIES, INCLUDING WITHOUT LIMITATION ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND ACCURACY OR COMPLETENESS OF ANY ANALYSIS RESULTS.\n\nWE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE, OR THAT ANY ANALYSIS OUTPUT WILL BE CORRECT, COMPLETE, OR RELIABLE. ALL ANALYSIS RESULTS ARE AUTOMATED AND INFORMATIONAL ONLY, AND YOU USE THEM AT YOUR OWN RISK.`,
     },
     {
-      heading: '12. Changes to Terms',
+      heading: '12. Governing Law and Disputes',
+      body: `These Terms are governed by and construed in accordance with applicable law. Any dispute arising from these Terms or your use of the Service shall first be addressed through whatever contact channel CodeScope makes available at that time. If a dispute cannot be resolved informally, both parties agree to submit to the jurisdiction of the relevant courts.`,
+    },
+    {
+      heading: '13. Changes to Terms',
       body: `We may revise these Terms at any time. When we make material changes we will update the "last updated" date. Your continued use of the Service following the effective date of revised Terms constitutes your acceptance of those Terms. If you do not agree to the revised Terms, you must stop using the Service.`,
     },
   ],

@@ -30,8 +30,8 @@ export default function CookieBanner({ openLegal }) {
   return (
     <div className="cookie-banner" role="region" aria-label="Cookie consent">
       <p className="cookie-banner__text">
-        CodeScope stores only what's needed to keep you signed in and remember your recent scans.
-        We don't use advertising or tracking cookies. See our{' '}
+        CodeScope stores a small preference in your browser and remembers your recent
+        scans. We don't use advertising or tracking cookies. See our{' '}
         <button type="button" className="legal-inline-link" onClick={() => openLegal('privacy')}>
           Privacy Policy
         </button>{' '}
