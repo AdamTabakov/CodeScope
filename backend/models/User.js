@@ -11,11 +11,13 @@ const userSchema = new mongoose.Schema(
       maxlength: 32,
       trim: true,
     },
-    // Define the email field with validation and constraints
+    // Define the email field with validation and constraints. Uniqueness is
+    // enforced at the service layer (isEmailTaken) plus a partial unique index
+    // (see config/db.js) so the testing allowlist can exempt specific
+    // addresses without weakening uniqueness for everyone else.
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },

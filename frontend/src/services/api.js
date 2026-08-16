@@ -45,6 +45,28 @@ export function signup({ username, email, password, confirmPassword }) {
   return request('/signup', { username, email, password, confirmPassword })
 }
 
+export async function verifyEmail(token) {
+  let response
+  try {
+    response = await fetch(`${BASE}/verify-email?token=${encodeURIComponent(token)}`)
+  } catch {
+    throw new Error('Could not reach the server. Make sure the backend is running.')
+  }
+
+  const text = await response.text()
+  let data = {}
+  if (text.trim()) {
+    try { data = JSON.parse(text) } catch { /* non-JSON body */ }
+  }
+
+  if (!response.ok) {
+    const err = new Error(data.error || `Verification failed (HTTP ${response.status}).`)
+    err.field = data.field ?? null
+    throw err
+  }
+  return data
+}
+
 export function requestPasswordReset(email) {
   return request('/forgot-password', { email })
 }

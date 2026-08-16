@@ -27,6 +27,11 @@ export const VIEW_META = {
     description:
       'Create a free CodeScope account and start understanding any codebase in plain English.',
   },
+  verify: {
+    title: 'Verify your email | CodeScope',
+    description:
+      'Confirm your CodeScope email address to activate your account and reach your dashboard.',
+  },
   dashboard: {
     title: 'Dashboard | CodeScope',
     description:

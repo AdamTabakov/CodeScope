@@ -44,7 +44,7 @@ export async function isUsernameTaken(username) {
 }
 
 export async function isEmailTaken(email) {
-  return !!(await User.exists({ email: { $eq: email.toLowerCase() } }))
+  return !!(await User.exists({ email: { $eq: String(email).trim().toLowerCase() } }))
 }
 
 export async function seedAdminUser() {

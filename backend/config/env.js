@@ -25,4 +25,10 @@ export const config = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  // Testing helper: email address(es) allowed to register more than once.
+  // Everyone else keeps unique-email enforcement. Never list real users.
+  duplicateEmailAllowlist: (process.env.ALLOW_DUPLICATE_EMAILS_FOR || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
 }

@@ -124,7 +124,10 @@ export async function signupUser({ username, email, password }) {
   if (await isUsernameTaken(username)) {
     return { ok: false, field: 'username', error: 'Username is already taken.' }
   }
-  if (await isEmailTaken(email)) {
+  // Allow duplicate email registration only for addresses in the testing
+  // allowlist (e.g. the developer's own inbox). Everyone else is kept unique.
+  const normalizedEmail = String(email ?? '').trim().toLowerCase()
+  if (!config.duplicateEmailAllowlist.includes(normalizedEmail) && (await isEmailTaken(normalizedEmail))) {
     return { ok: false, field: 'email', error: 'Email is already registered.' }
   }
 
@@ -158,7 +161,10 @@ export async function signupUser({ username, email, password }) {
   }
 }
 
-// Verifies an account from an emailed token. Returns { ok, field?, error? }.
+// Verifies an account from an emailed token. On success the user is signed in
+// and receives a session JWT, so clicking the emailed link lands them on the
+// dashboard. The link token is single-use and short-lived, so this is safe.
+// Returns { ok, token?, user?, field?, error? }.
 export async function verifyEmail(token) {
   if (typeof token !== 'string' || token.length < 16) {
     return { ok: false, field: 'token', error: 'Invalid or expired verification link.' }
@@ -180,5 +186,14 @@ export async function verifyEmail(token) {
     emailVerificationTokenExpires: null,
   })
 
-  return { ok: true, user: { username: user.username, email: user.email } }
+  return {
+    ok: true,
+    token: signToken(user),
+    user: {
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      emailVerified: true,
+    },
+  }
 }

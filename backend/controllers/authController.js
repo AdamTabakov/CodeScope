@@ -56,7 +56,8 @@ export async function signup(request, response, next) {
 }
 
 // Controller for verifying an email address via the link emailed at signup.
-// This is public: the emailed token itself is the credential.
+// This is public: the emailed token itself is the credential. On success the
+// user is signed in and receives a session token.
 export async function verifyEmailAddress(request, response, next) {
   try {
     const token = request.query?.token
@@ -64,7 +65,7 @@ export async function verifyEmailAddress(request, response, next) {
     if (!result.ok) {
       return response.status(400).json({ field: result.field, error: result.error })
     }
-    return response.json({ ok: true, user: result.user })
+    return response.json({ token: result.token, user: result.user })
   } catch (error) {
     return next(error)
   }

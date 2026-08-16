@@ -17,12 +17,13 @@ const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const Scan = lazy(() => import('./pages/Scan.jsx'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail.jsx'))
 
 // Views that require the user to be signed in
 const AUTH_REQUIRED = new Set(['dashboard', 'scan'])
 
 // All known views — anything else gets a 404
-const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error', 'forgot', 'reset'])
+const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error', 'forgot', 'reset', 'verify'])
 
 // Short human labels used when composing error-page <title>s.
 const ERROR_LABELS = {
@@ -44,6 +45,7 @@ export default function App() {
   const [errorState, setErrorState] = useState({ type: 404, message: '' })
   const [scanUrl, setScanUrl] = useState('')
   const [resetToken, setResetToken] = useState('')
+  const [verifyToken, setVerifyToken] = useState('')
   const [recentRepos, setRecentRepos] = useState(() => {
     try {
       return JSON.parse(window.localStorage.getItem('codescope:recentRepos') || '[]')
@@ -79,14 +81,21 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [])
 
-  // If the app is opened from a password-reset email link, route straight to
-  // the reset view with the emailed token. Links are `${APP_URL}/reset?token=...`.
+  // If the app is opened from an emailed link, route straight to the matching
+  // view with the emailed token. Verification links are `${APP_URL}/verify?token=...`,
+  // password-reset links are `${APP_URL}/reset?token=...`.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
+    const pathname = window.location.pathname
     if (token) {
-      setResetToken(token)
-      setView('reset')
+      if (pathname.includes('/verify')) {
+        setVerifyToken(token)
+        setView('verify')
+      } else if (pathname.includes('/reset')) {
+        setResetToken(token)
+        setView('reset')
+      }
     }
   }, [])
 
@@ -176,6 +185,14 @@ export default function App() {
       case 'forgot':
         return (
           <ForgotPassword
+            navigate={navigate}
+          />
+        )
+      case 'verify':
+        return (
+          <VerifyEmail
+            token={verifyToken}
+            onAuthSuccess={handleAuthSuccess}
             navigate={navigate}
           />
         )
