@@ -58,4 +58,97 @@ describe('auth api', () => {
 
     assert.equal(response.status, 401)
   })
+
+  it('forgot-password accepts a well-formed email and hides account existence', async () => {
+    // Registered and unregistered addresses must produce identical responses so
+    // the endpoint cannot be used to enumerate accounts.
+    const unknown = await fetch(`${baseUrl}/api/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'does-not-exist@example.com' }),
+    })
+    const known = await fetch(`${baseUrl}/api/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'adam@codescope.local' }),
+    })
+
+    assert.equal(unknown.status, 200)
+    assert.equal(known.status, 200)
+    assert.deepEqual(await unknown.json(), await known.json())
+  })
+
+  it('forgot-password rejects an invalid email', async () => {
+    const response = await fetch(`${baseUrl}/api/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email' }),
+    })
+
+    assert.equal(response.status, 400)
+  })
+
+  it('forgot-password rejects non-object payloads', async () => {
+    const response = await fetch(`${baseUrl}/api/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: { $ne: 'x' } }),
+    })
+
+    assert.equal(response.status, 400)
+  })
+
+  it('reset-password rejects a short/missing token', async () => {
+    const response = await fetch(`${baseUrl}/api/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: 'short', password: 'newpass123', confirmPassword: 'newpass123' }),
+    })
+
+    assert.equal(response.status, 400)
+  })
+
+  it('reset-password rejects a weak new password', async () => {
+    const response = await fetch(`${baseUrl}/api/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'a'.repeat(48),
+        password: 'short',
+        confirmPassword: 'short',
+      }),
+    })
+
+    assert.equal(response.status, 400)
+  })
+
+  it('reset-password rejects mismatched confirmation', async () => {
+    const response = await fetch(`${baseUrl}/api/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'a'.repeat(48),
+        password: 'newpass123',
+        confirmPassword: 'different',
+      }),
+    })
+
+    assert.equal(response.status, 400)
+  })
+
+  it('reset-password fails closed when the token is unknown', async () => {
+    // No DB is connected during tests, so the service returns the generic
+    // invalid-token error rather than a 500.
+    const response = await fetch(`${baseUrl}/api/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'a'.repeat(48),
+        password: 'newpass123',
+        confirmPassword: 'newpass123',
+      }),
+    })
+
+    assert.equal(response.status, 400)
+  })
 })

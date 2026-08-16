@@ -45,6 +45,14 @@ export function signup({ username, email, password, confirmPassword }) {
   return request('/signup', { username, email, password, confirmPassword })
 }
 
+export function requestPasswordReset(email) {
+  return request('/forgot-password', { email })
+}
+
+export function resetPassword({ token, password, confirmPassword }) {
+  return request('/reset-password', { token, password, confirmPassword })
+}
+
 /**
  * Streams an assistant reply from the /api/chat endpoint.
  * Resolves with the fully accumulated reply string; calls onDelta(delta)

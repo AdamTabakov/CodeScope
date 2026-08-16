@@ -1,5 +1,5 @@
-import { loginUser, signupUser, verifyEmail } from '../services/authService.js'
-import { parseLoginBody, parseSignupBody } from '../utils/validation.js'
+import { loginUser, signupUser, verifyEmail, requestPasswordReset, resetPassword } from '../services/authService.js'
+import { parseLoginBody, parseSignupBody, parseForgotPasswordBody, parseResetPasswordBody } from '../utils/validation.js'
 import { isConnected } from '../config/db.js'
 
 // Controller for handling user login
@@ -65,6 +65,42 @@ export async function verifyEmailAddress(request, response, next) {
       return response.status(400).json({ field: result.field, error: result.error })
     }
     return response.json({ ok: true, user: result.user })
+  } catch (error) {
+    return next(error)
+  }
+}
+
+// Requests a password reset email. Always returns success so the response
+// cannot reveal whether the address is registered.
+export async function forgotPassword(request, response, next) {
+  try {
+    const parsed = parseForgotPasswordBody(request.body)
+    if (!parsed.ok) {
+      return response.status(400).json({ error: parsed.error })
+    }
+
+    await requestPasswordReset(parsed.email)
+
+    return response.json({ ok: true })
+  } catch (error) {
+    return next(error)
+  }
+}
+
+// Completes a password reset using the token from the emailed link.
+export async function resetPasswordEndpoint(request, response, next) {
+  try {
+    const parsed = parseResetPasswordBody(request.body)
+    if (!parsed.ok) {
+      return response.status(400).json({ field: parsed.field, error: parsed.error })
+    }
+
+    const result = await resetPassword(parsed.token, parsed.password)
+    if (!result.ok) {
+      return response.status(400).json({ field: result.field, error: result.error })
+    }
+
+    return response.json({ ok: true })
   } catch (error) {
     return next(error)
   }

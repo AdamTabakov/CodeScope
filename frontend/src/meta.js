@@ -12,6 +12,16 @@ export const VIEW_META = {
     description:
       'Sign in to your CodeScope account to scan repositories, view complexity scores, and track flagged issues.',
   },
+  forgot: {
+    title: 'Reset password | CodeScope',
+    description:
+      'Request a password reset link for your CodeScope account.',
+  },
+  reset: {
+    title: 'Choose a new password | CodeScope',
+    description:
+      'Set a new password for your CodeScope account using the emailed reset link.',
+  },
   signup: {
     title: 'Get started free | CodeScope',
     description:

@@ -74,3 +74,39 @@ export function parseSignupBody(body) {
 
   return { ok: true, username, email: trimmedEmail, password }
 }
+
+export function parseForgotPasswordBody(body) {
+  if (!isPlainObject(body)) {
+    return { ok: false, error: 'Invalid request payload.' }
+  }
+
+  const { email } = body
+  const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+  if (!isValidEmail(trimmedEmail)) {
+    return { ok: false, error: 'Enter a valid email address.' }
+  }
+
+  return { ok: true, email: trimmedEmail }
+}
+
+export function parseResetPasswordBody(body) {
+  if (!isPlainObject(body)) {
+    return { ok: false, field: null, error: 'Invalid request payload.' }
+  }
+
+  const { token, password, confirmPassword } = body
+
+  if (typeof token !== 'string' || token.length < 16 || token.length > 256) {
+    return { ok: false, field: 'token', error: 'Invalid or expired reset link.' }
+  }
+
+  if (!isSafePassword(password)) {
+    return { ok: false, field: 'password', error: 'Password must be 8-128 characters.' }
+  }
+
+  if (password !== confirmPassword) {
+    return { ok: false, field: 'confirmPassword', error: 'Passwords do not match.' }
+  }
+
+  return { ok: true, token, password }
+}

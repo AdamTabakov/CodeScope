@@ -485,6 +485,11 @@ a:hover {
   gap: 0.5rem;
 }
 
+.forgot-password-row {
+  margin-top: -0.25rem;
+  text-align: right;
+}
+
 .auth-footer {
   margin-top: 1.5rem;
   text-align: center;

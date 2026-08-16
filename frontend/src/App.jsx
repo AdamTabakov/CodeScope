@@ -15,12 +15,14 @@ const Login = lazy(() => import('./pages/Login.jsx'))
 const Signup = lazy(() => import('./pages/Signup.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const Scan = lazy(() => import('./pages/Scan.jsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
 
 // Views that require the user to be signed in
 const AUTH_REQUIRED = new Set(['dashboard', 'scan'])
 
 // All known views — anything else gets a 404
-const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error'])
+const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error', 'forgot', 'reset'])
 
 // Short human labels used when composing error-page <title>s.
 const ERROR_LABELS = {
@@ -41,6 +43,7 @@ export default function App() {
   const [legalPage, setLegalPage] = useState(null)
   const [errorState, setErrorState] = useState({ type: 404, message: '' })
   const [scanUrl, setScanUrl] = useState('')
+  const [resetToken, setResetToken] = useState('')
   const [recentRepos, setRecentRepos] = useState(() => {
     try {
       return JSON.parse(window.localStorage.getItem('codescope:recentRepos') || '[]')
@@ -74,6 +77,17 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 400)
     return () => clearTimeout(timer)
+  }, [])
+
+  // If the app is opened from a password-reset email link, route straight to
+  // the reset view with the emailed token. Links are `${APP_URL}/reset?token=...`.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    if (token) {
+      setResetToken(token)
+      setView('reset')
+    }
   }, [])
 
   const navigate = (target, opts = {}) => {
@@ -157,6 +171,19 @@ export default function App() {
             navigate={navigate}
             onAuthSuccess={handleAuthSuccess}
             openLegal={openLegal}
+          />
+        )
+      case 'forgot':
+        return (
+          <ForgotPassword
+            navigate={navigate}
+          />
+        )
+      case 'reset':
+        return (
+          <ResetPassword
+            navigate={navigate}
+            token={resetToken}
           />
         )
       case 'dashboard':

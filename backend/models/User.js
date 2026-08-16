@@ -39,6 +39,16 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Password reset flow. Works like email verification: only a SHA-256 hash
+    // of the emailed token is stored, and it expires after a short window.
+    resetPasswordTokenHash: {
+      type: String,
+      default: null,
+    },
+    resetPasswordTokenExpires: {
+      type: Date,
+      default: null,
+    },
     // Define the role field with allowed values and a default
     role: {
       type: String,

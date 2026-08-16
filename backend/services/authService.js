@@ -3,11 +3,16 @@ import jwt from 'jsonwebtoken'
 import crypto from 'node:crypto'
 import { config } from '../config/env.js'
 import { findUserForLogin, createUser, isUsernameTaken, isEmailTaken } from './userService.js'
-import { sendVerificationEmail } from './emailService.js'
+import { sendVerificationEmail, sendPasswordResetEmail } from './emailService.js'
+import { isConnected } from '../config/db.js'
+import { isValidEmail } from '../utils/validation.js'
 import { User } from '../models/User.js'
 
 // Email verification token lifetime (ms). Default 24h.
 const VERIFY_TOKEN_TTL_MS = Number(process.env.VERIFY_TOKEN_TTL_MS || 24 * 60 * 60 * 1000)
+
+// Password reset token lifetime (ms). Default 5 minutes.
+const RESET_TOKEN_TTL_MS = Number(process.env.RESET_TOKEN_TTL_MS || 5 * 60 * 1000)
 
 // Generates an unguessable token and returns it alongside its SHA-256 hash.
 // Only the hash is stored so a database leak cannot be replayed to verify.
@@ -15,6 +20,61 @@ function makeVerificationToken() {
   const token = crypto.randomBytes(24).toString('hex')
   const hash = crypto.createHash('sha256').update(token).digest('hex')
   return { token, hash }
+}
+
+// Requests a password reset for an email address. Always reports success so
+// the API cannot be used to enumerate registered addresses. If the address is
+// registered, a single-use reset token is emailed with a short expiry.
+export async function requestPasswordReset(email) {
+  const normalizedEmail = String(email ?? '').trim().toLowerCase()
+
+  // Perform a lookup regardless so timing does not leak account existence.
+  const user = isConnected() && isValidEmail(normalizedEmail)
+    ? await User.findOne({ email: { $eq: normalizedEmail } })
+    : null
+
+  if (user) {
+    const { token, hash } = makeVerificationToken()
+    await user.updateOne({
+      resetPasswordTokenHash: hash,
+      resetPasswordTokenExpires: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    })
+    await sendPasswordResetEmail({ to: user.email, username: user.username, token })
+  }
+
+  return { ok: true }
+}
+
+// Consumes a reset token and replaces the account's password. The presented
+// token is hashed before lookup so stored hashes are never compared in the clear.
+export async function resetPassword(token, newPassword) {
+  if (typeof token !== 'string' || token.length < 16) {
+    return { ok: false, field: 'token', error: 'Invalid or expired reset link.' }
+  }
+
+  // Without a database there is no way to find or update the account.
+  if (!isConnected()) {
+    return { ok: false, field: 'token', error: 'Invalid or expired reset link.' }
+  }
+
+  const hash = crypto.createHash('sha256').update(token).digest('hex')
+  const user = await User.findOne({
+    resetPasswordTokenHash: { $eq: hash },
+    resetPasswordTokenExpires: { $gt: new Date() },
+  })
+
+  if (!user) {
+    return { ok: false, field: 'token', error: 'Invalid or expired reset link.' }
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12)
+  await user.updateOne({
+    passwordHash,
+    resetPasswordTokenHash: null,
+    resetPasswordTokenExpires: null,
+  })
+
+  return { ok: true }
 }
 
 // Helper function to sign a JWT token for a user

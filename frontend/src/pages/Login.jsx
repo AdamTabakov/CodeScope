@@ -114,6 +114,12 @@ export default function Login({ navigate, onAuthSuccess, openLegal }) {
             </div>
           )}
 
+          <p className="forgot-password-row">
+            <button type="button" className="legal-inline-link" onClick={() => navigate('forgot')}>
+              Forgot password?
+            </button>
+          </p>
+
           <button className="btn btn--primary btn--full" type="submit" disabled={loading}>
             {loading ? (
               <><IconSpinner />Verifying&hellip;</>
