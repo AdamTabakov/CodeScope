@@ -10,6 +10,11 @@ import { errorHandler, apiNotFound } from './middleware/errorHandler.js'
 import { config } from './config/env.js'
 
 const app = express()
+
+// Trust the first proxy hop. Production is deployed behind a reverse proxy
+// (Render) that sets X-Forwarded-For; without this, express-rate-limit cannot
+// derive the client IP and fails with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+app.set('trust proxy', 1)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendDist = path.resolve(__dirname, '../frontend/dist')
 // The backend only serves the built frontend when it is co-located (local dev).
