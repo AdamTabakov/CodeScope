@@ -9,57 +9,97 @@ const PRIVACY = {
   updated: EFFECTIVE_DATE,
   sections: [
     {
-      heading: '1. Introduction',
-      body: `CodeScope ("we", "our", "us") provides an automated code analysis service (the "Service") that reads code, explains behaviour in plain English, flags potential issues, and scores complexity. This Privacy Policy describes what personal information we collect when you use the Service, how we use it, how we protect it, and the choices you have over your data.\n\nBy creating an account or using the Service you agree to this policy. If you do not agree, please do not use CodeScope.`,
+      heading: 'Introduction',
+      body: `CodeScope ("CodeScope", "we", "our", or "us") provides an automated code analysis service (the "Service") that analyzes source code and repositories, explains code behavior in plain English, identifies potential issues, and provides code complexity analysis.\n\nThis Privacy Policy explains what information we collect, how we use it, how information is processed through third-party services, how long we retain information, and the choices available to you when using CodeScope.\n\nBy using CodeScope, you acknowledge the practices described in this Privacy Policy. If you do not agree with these practices, please do not use the Service.`,
     },
     {
-      heading: '2. Information We Collect',
+      heading: '1. Information We Collect',
       subsections: [
         {
-          label: 'a) Account information',
-          text: 'When you register we collect your chosen username, your email address, and your password. Your password is immediately processed through bcrypt (work factor 12) before it is written to our database. The plain-text password is never stored or logged anywhere in our systems.',
+          label: 'a) Account Information',
+          text: 'When you create an account, we collect:\n\n• Username\n• Email address\n• Password\n\nPasswords are processed using bcrypt with a work factor of 12 before being stored in our database. Plain-text passwords are not stored or intentionally logged by CodeScope.\n\nWe may also store account-related information necessary to authenticate users and enforce account permissions.',
         },
         {
-          label: 'b) Scan content',
-          text: 'Code snippets, file paths, and repository references you submit for analysis are transmitted to our servers, processed to produce explanations, issue flags, and complexity scores, and the results are returned to your browser.\n\nTo analyse a repository we fetch it from the public GitHub API, and to generate AI explanations we send the relevant code to the OpenAI API. Both of these are third-party services with their own data handling practices, which we do not control.\n\nScan results are not stored on our servers. They exist only in the memory of your browser session and are lost when you close the page. We do not currently provide a way to retrieve past scans.\n\nDo not paste secrets, API keys, tokens, database credentials, private keys, or personally identifiable information belonging to other people into scans, because that data is transmitted to the third-party services above.',
+          label: 'b) Repository and Scan Information',
+          text: 'When you submit code or request an analysis, CodeScope may process:\n\n• Source code\n• File contents\n• File paths\n• Repository URLs\n• Repository metadata\n• Information necessary to perform the requested analysis\n\nCode submitted for analysis is transmitted to CodeScope\'s servers for processing.\n\nFor repository-based analysis, CodeScope may retrieve repository information and source files from GitHub or another supported repository provider.\n\nCodeScope processes this information solely for purposes related to providing the requested analysis and operating the Service.',
         },
         {
-          label: 'c) Usage and technical data',
-          text: 'Our servers automatically log standard HTTP metadata: IP address, request path, HTTP method, response status code, response time, and timestamp. This data is used solely for security monitoring, abuse prevention, and service reliability. It is not linked to your account profile for marketing or tracking purposes.',
+          label: 'c) AI Processing',
+          text: 'To generate certain analysis results, relevant code and associated information may be transmitted to OpenAI\'s API.\n\nOpenAI processes information submitted through its API according to its applicable terms and privacy practices.\n\nCodeScope does not intentionally use submitted code to train or fine-tune artificial intelligence models.',
         },
         {
-          label: 'd) Browser and session data',
-          text: 'After you sign in, an authentication token (JWT) is issued and held in your browser\'s memory. This token contains your user ID, username, and role. It is not written to a cookie; it is cleared automatically when you close the tab or sign out. We also store a small list of recently scanned repository URLs in your browser\'s localStorage so the "recent scans" list can be shown on your dashboard.',
+          label: 'd) Usage and Technical Information',
+          text: 'When you use CodeScope, our infrastructure may automatically process technical information associated with requests, including:\n\n• IP address\n• Request path\n• HTTP method\n• Response status\n• Response time\n• Timestamp\n• Basic error and diagnostic information\n\nThis information is used for:\n\n• Security monitoring\n• Abuse prevention\n• Troubleshooting\n• Service reliability\n• Detecting and investigating suspicious activity\n\nWe do not use this information for behavioral advertising.',
+        },
+        {
+          label: 'e) Browser Storage',
+          text: 'CodeScope uses browser-side storage for certain functionality.\n\nAuthentication state may be maintained in browser memory. Authentication tokens are not intentionally stored in cookies or localStorage.\n\nCodeScope may store recently scanned repository URLs in your browser\'s localStorage so that previously accessed repositories can be displayed in the application\'s recent-scans interface.\n\nThese locally stored repository URLs remain on your device unless removed by you or cleared by your browser.\n\nCodeScope does not intentionally use localStorage to store passwords, authentication tokens, or complete source-code submissions.',
         },
       ],
     },
     {
-      heading: '3. How We Use Your Information',
-      body: `We use the information we collect to:\n\n• Create and authenticate your account\n• Process code you submit and return analysis results\n• Send account verification emails\n• Monitor service health and investigate security incidents\n\nWe do not sell, rent, or share your personal information with third parties for advertising or marketing purposes. We do not use your code submissions to train or fine-tune models.`,
+      heading: '2. How We Use Information',
+      body: `We use information we collect to:\n\n• Create and manage user accounts\n• Authenticate users\n• Provide requested code analysis\n• Retrieve repositories requested by users\n• Generate AI-assisted analysis\n• Return analysis results\n• Send account-related communications, including verification emails where applicable\n• Maintain and improve the reliability of the Service\n• Detect and prevent abuse, fraud, and unauthorized access\n• Investigate security incidents\n• Comply with applicable legal obligations\n\nWe do not sell personal information.\n\nWe do not use submitted source code for advertising purposes.\n\nWe do not intentionally use submitted source code to train or fine-tune AI models.`,
     },
     {
-      heading: '4. How We Protect Your Information',
-      body: `• Passwords are hashed with bcrypt (work factor 12). We cannot recover or read your password.\n• Authentication uses short-lived signed JWTs that expire after one hour. Tokens are never stored server-side in a way that allows bulk extraction.\n• Database access is restricted to authenticated application processes; no public-facing database ports are exposed.\n• Transport layer security (TLS/HTTPS) encrypts all data in transit between your browser and our servers.\n• We follow the principle of least privilege: application components access only the data they require.`,
+      heading: '3. How We Share Information',
+      body: `We do not sell, rent, or share personal information with third parties for their own advertising purposes.\n\nInformation may be processed by service providers that help us operate CodeScope.\n\nThese providers may process information on our behalf for purposes such as:\n\n• Cloud hosting\n• Database infrastructure\n• Repository access\n• AI-powered analysis\n• Email delivery\n• Security and service reliability\n\nThese providers may process information according to their own terms and privacy policies.\n\nCurrent Third-Party Services\n\nCodeScope may use third-party services including:\n\n• Cloudflare — used for frontend hosting, content delivery, and related infrastructure.\n• Render — used to host CodeScope\'s backend application.\n• MongoDB — used to store account and application data.\n• GitHub — used to retrieve repository information and source code when a repository is analyzed through GitHub.\n• OpenAI — used to process relevant code and generate AI-assisted analysis.\n• Resend — used to send account-related emails, including verification emails.\n\nThe specific information transmitted to each provider depends on the functionality being used.`,
     },
     {
-      heading: '5. Data Retention',
-      body: `• Account data (username, email, password hash) is retained for as long as your account exists.\n• Scan results are not stored on our servers, so there is nothing to retain or delete on our end.\n• Server access logs are retained for up to 90 days for security and abuse-prevention purposes, then purged.\n• We do not currently offer a self-service account deletion feature. If you want your account data removed, contact us through whatever contact channel CodeScope makes available at that time, and we will act on your request as required by law.`,
+      heading: '4. Code Retention',
+      body: `CodeScope is designed not to permanently store source-code submissions or completed scan results on its application servers.\n\nWhen an analysis is completed, the resulting information is returned to the user\'s browser rather than being maintained as a permanent scan history by CodeScope.\n\nHowever, code and related information may temporarily exist in application memory, network infrastructure, processing systems, logs, caches, or third-party services as necessary to provide the requested functionality, maintain security, or comply with applicable legal obligations.\n\nThird-party providers may maintain information according to their own retention policies and applicable agreements.\n\nBecause of this, users should not submit passwords, API keys, private keys, authentication tokens, database credentials, confidential information, or other sensitive information unless they are authorized to do so and understand the associated risks.`,
     },
     {
-      heading: '6. Your Rights',
-      body: `Depending on your jurisdiction you may have rights that include: accessing the personal data we hold about you, receiving a copy of your data, correcting inaccurate data, or requesting deletion of your account and data.\n\nBecause CodeScope does not currently provide a dedicated contact address, we are not yet able to guarantee a response to requests to exercise these rights. We will implement a mechanism for such requests in a future version of the Service. Until then, we do not make any representation that we can process data-subject requests.`,
+      heading: '5. Account Data Retention',
+      body: `Account information, including your username, email address, and password hash, may be retained for as long as your account remains active.\n\nWe may retain limited information after account termination where reasonably necessary to:\n\n• Comply with legal obligations\n• Prevent fraud or abuse\n• Resolve disputes\n• Maintain security\n• Enforce our agreements\n\nInformation that is no longer required for these purposes may be deleted or anonymized.`,
     },
     {
-      heading: '7. Cookies and Tracking',
-      body: `CodeScope does not use advertising cookies, third-party analytics cookies, or tracking pixels. We do not embed third-party scripts that collect behavioural data. The browser storage we use is in-memory session state (cleared on tab close) to hold your authentication token, plus a small list of recently scanned repository URLs in localStorage.`,
+      heading: '6. Server Logs',
+      body: `CodeScope\'s infrastructure may retain technical logs for security, abuse prevention, troubleshooting, and reliability purposes.\n\nThese logs may include IP addresses, request information, timestamps, response information, and diagnostic information.\n\nWe intend to retain routine server logs for no longer than reasonably necessary for these purposes, with a target retention period of up to 90 days where technically and operationally feasible.\n\nSecurity or incident-related information may be retained for longer when reasonably necessary to investigate or respond to an incident or comply with legal obligations.`,
     },
     {
-      heading: "8. Children's Privacy",
-      body: `CodeScope is a developer tool intended for users aged 13 and over. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has created an account, contact us through whatever contact channel CodeScope makes available at that time, and we will take reasonable steps to delete the account as required by law.`,
+      heading: '7. Security',
+      body: `We use reasonable technical and organizational measures designed to protect information processed by CodeScope.\n\nThese measures may include:\n\n• Password hashing using bcrypt\n• Short-lived signed authentication tokens\n• HTTPS/TLS encryption for data transmitted between clients and our servers\n• Access controls\n• Least-privilege application permissions\n• Restricted database access\n• Server-side authentication and authorization\n• Security monitoring and abuse prevention\n\nNo Internet-based service can guarantee absolute security.\n\nYou are responsible for maintaining the security of your account credentials and for reviewing information before submitting it to CodeScope.`,
     },
     {
-      heading: '9. Changes to This Policy',
-      body: `We may update this Privacy Policy as the Service evolves. When we make material changes we will update the "last updated" date at the top of this document. Continued use of the Service after the effective date of a revised policy constitutes your acceptance of the changes.`,
+      heading: '8. Authentication',
+      body: `CodeScope uses signed JSON Web Tokens (JWTs) for authentication.\n\nAuthentication tokens are designed to be short-lived and expire after approximately one hour.\n\nAuthentication tokens are maintained in browser memory rather than intentionally being persisted in cookies or localStorage.\n\nYou should sign out when using CodeScope on a shared or publicly accessible device.`,
+    },
+    {
+      heading: '9. Cookies and Tracking',
+      body: `CodeScope does not intentionally use advertising cookies, tracking pixels, or third-party advertising trackers.\n\nCodeScope may use technically necessary browser storage required for application functionality.\n\nThis includes in-memory authentication state and localStorage used to maintain a list of recently scanned repository URLs.\n\nWe do not use these mechanisms to create advertising profiles or sell behavioral information.\n\nThird-party infrastructure providers may independently use technically necessary mechanisms as described in their own policies.`,
+    },
+    {
+      heading: '10. Your Privacy Rights',
+      body: `Depending on where you live, you may have legal rights relating to your personal information.\n\nThese rights may include the ability to:\n\n• Request access to personal information we hold about you\n• Request correction of inaccurate information\n• Request deletion of personal information\n• Request information about how your personal information is processed\n• Object to or restrict certain processing activities\n• Withdraw consent where processing is based on consent\n• Request a copy of certain personal information\n\nThe availability of these rights depends on applicable law and the circumstances of the request.\n\nCodeScope may need to verify your identity before fulfilling certain requests.\n\nWhere CodeScope is legally required to provide a mechanism for privacy requests, we will provide an appropriate mechanism for submitting those requests.`,
+    },
+    {
+      heading: '11. Account Deletion',
+      body: `CodeScope does not currently provide a self-service account deletion feature.\n\nWe intend to implement a self-service account deletion mechanism in a future version of the Service. Once implemented, users will be able to request deletion of their account and associated personal information through the Service.\n\nUntil that functionality is available, there is no mechanism for submitting account or data deletion requests.\n\nWhen an account is deleted, we will delete or anonymize associated personal information where reasonably possible and where we are not required to retain it for legal, security, fraud-prevention, or other legitimate purposes.`,
+    },
+    {
+      heading: '12. International Processing',
+      body: `CodeScope and its service providers may process information on servers located outside your province, territory, state, or country.\n\nAs a result, your information may be subject to the laws of jurisdictions where CodeScope or its service providers operate.\n\nBy using the Service, you acknowledge that information may be processed in jurisdictions other than your own, subject to applicable privacy laws.`,
+    },
+    {
+      heading: "13. Children's Privacy",
+      body: `CodeScope is intended for users aged 13 and older.\n\nWe do not knowingly collect personal information from children under 13.\n\nIf we become aware that an account was created by a child under 13, we will take reasonable steps to delete the account and associated personal information where required by applicable law.`,
+    },
+    {
+      heading: '14. Third-Party Links and Services',
+      body: `CodeScope may contain links to or integrations with third-party services.\n\nThese third parties operate independently from CodeScope and may have their own privacy policies, terms, security practices, and data-retention practices.\n\nCodeScope is not responsible for the privacy practices of third-party services that it does not control.\n\nYou should review the applicable policies of third-party services before providing them with information.`,
+    },
+    {
+      heading: '15. Data Breaches and Security Incidents',
+      body: `Despite reasonable security measures, no system is completely secure.\n\nIf CodeScope experiences a security incident involving personal information, we will respond in accordance with applicable legal requirements and take reasonable steps to investigate, contain, and remediate the incident.\n\nWhere required by law, affected users or regulatory authorities will be notified.`,
+    },
+    {
+      heading: '16. Changes to This Privacy Policy',
+      body: `We may update this Privacy Policy as CodeScope develops or as applicable laws and data-processing practices change.\n\nWhen we make material changes, we will update the "Last updated" date at the beginning of this policy.\n\nWhere required by applicable law, we may provide additional notice of material changes.\n\nYour continued use of CodeScope after an updated Privacy Policy becomes effective constitutes acknowledgment of the updated policy to the extent permitted by applicable law.`,
+    },
+    {
+      heading: '17. Contact and Privacy Requests',
+      body: `Privacy-related request mechanisms are not implemented yet. CodeScope does not currently provide a mechanism for submitting privacy-related requests.\n\nWe intend to implement such mechanisms in a future version of the Service. Until then, there is no mechanism for submitting privacy-related requests.`,
     },
   ],
 }
@@ -70,55 +110,99 @@ const TERMS = {
   sections: [
     {
       heading: '1. Acceptance of Terms',
-      body: `By registering for a CodeScope account, accessing the Service, or clicking "Create account", you agree to be legally bound by these Terms of Service ("Terms") and our Privacy Policy. If you do not agree to all of these Terms, you may not use the Service.\n\nIf you are using CodeScope on behalf of an organisation, you represent that you have the authority to bind that organisation to these Terms.`,
+      body: `These Terms of Service ("Terms") govern your access to and use of CodeScope ("CodeScope", "Service", "we", "us", or "our").\n\nBy creating an account, accessing the Service, submitting code for analysis, connecting a repository, or otherwise using CodeScope, you agree to these Terms and our Privacy Policy.\n\nIf you do not agree to these Terms, you must not access or use the Service.\n\nIf you use CodeScope on behalf of an organization, you represent that you have the authority to accept these Terms on that organization's behalf.`,
     },
     {
-      heading: '2. Description of Service',
-      body: `CodeScope provides automated static analysis of source code submitted by users. The Service generates plain-English explanations of code behaviour, identifies potential bugs and security issues, and produces complexity scores. All analysis is automated. Results are informational aids for developers and do not constitute professional legal, security, or engineering advice.`,
+      heading: '2. Description of the Service',
+      body: `CodeScope provides automated software analysis tools that may analyze source code and repositories to provide:\n\n• Plain-English explanations of code behavior\n• Potential bugs and security issues\n• Code quality observations\n• Complexity analysis and scores\n• Other automated development insights\n\nCodeScope uses automated systems, including artificial intelligence and third-party services, to generate analysis.\n\nThe Service is provided as a development aid and does not constitute professional software engineering, cybersecurity, legal, or other professional advice.`,
     },
     {
       heading: '3. Eligibility',
-      body: `You must be at least 13 years of age to use CodeScope. By creating an account, you represent and warrant that you meet this age requirement and that the information you provide during registration is accurate and complete.`,
+      body: `You must be at least 13 years old to use CodeScope.\n\nBy using the Service, you represent that:\n\n• You meet the applicable minimum age requirement\n• You have the legal capacity to agree to these Terms\n• Information you provide to us is accurate and complete\n• You will comply with all applicable laws and regulations\n\nIf you are using CodeScope on behalf of an organization, you additionally represent that you are authorized to bind that organization to these Terms.`,
     },
     {
-      heading: '4. Account Responsibility',
-      body: `• You are solely responsible for maintaining the confidentiality of your username and password.\n• You are responsible for all activity that occurs under your account, whether or not authorised by you.\n• You should notify us if you suspect any unauthorised access to your account, through whatever contact channel CodeScope makes available at that time.\n• You may not transfer your account to another person or share your credentials with others.\n• You may not create accounts through automated means or create accounts for other individuals without their explicit consent.`,
+      heading: '4. Accounts',
+      body: `Certain features require you to create an account.\n\nYou are responsible for:\n\n• Providing accurate account information\n• Maintaining the confidentiality of your credentials\n• Keeping your password secure\n• All activity occurring through your account\n\nYou may not:\n\n• Share your account credentials with another person\n• Transfer your account to another person\n• Create accounts through automated means without authorization\n• Impersonate another person or entity\n• Use another person's account without permission\n\nWe may suspend or terminate accounts that violate these Terms or create security, legal, or operational risks.`,
     },
     {
       heading: '5. Acceptable Use',
-      body: `You agree to use CodeScope only for lawful purposes and in accordance with these Terms. You agree not to:\n\n• Submit code that you do not own or that you are not authorised to review, analyse, or share\n• Use the Service to identify vulnerabilities in systems, infrastructure, or applications that you do not own or have written permission to test\n• Attempt to bypass, circumvent, or defeat authentication mechanisms, rate limits, or access controls\n• Send automated requests to the Service in a volume or pattern that degrades availability for other users (scraping, DDoS, fuzzing)\n• Submit payloads specifically designed to exploit the analysis engine, the backend, or the database\n• Impersonate any person or entity or misrepresent your affiliation with any person or entity\n• Use the Service for any purpose that violates applicable local, national, or international law`,
+      body: `You may use CodeScope only for lawful purposes and in accordance with these Terms.\n\nYou must not:\n\n• Submit code that you do not own or have authorization to analyze\n• Use CodeScope to analyze systems or applications without appropriate authorization\n• Attempt to bypass authentication, rate limits, access controls, or other security mechanisms\n• Attempt to gain unauthorized access to CodeScope or its infrastructure\n• Interfere with or disrupt the Service\n• Conduct scraping, denial-of-service attacks, fuzzing, or other activity that may degrade the Service\n• Upload malware or code designed to compromise CodeScope or its infrastructure\n• Attempt to exploit vulnerabilities in CodeScope\n• Reverse engineer or attempt to extract proprietary components of the Service except where permitted by applicable law\n• Circumvent usage restrictions\n• Use the Service to violate applicable laws or regulations\n• Impersonate another person or entity\n• Upload content that infringes another person's intellectual property or other rights\n\nWe reserve the right to investigate suspected violations and take appropriate action.`,
     },
     {
-      heading: '6. Scan Content and Your Code',
-      body: `You retain all ownership rights in the code you submit. By submitting code for analysis, you grant CodeScope a limited, non-exclusive, royalty-free licence to process and analyse that code solely to provide you with the analysis results. CodeScope does not store your submissions or display them to other users.\n\nYou represent and warrant that:\n• You own or are authorised to submit any code you send to CodeScope\n• Your submissions do not violate the intellectual property rights of any third party\n• Your submissions do not contain malware, exploits, or payloads intended to harm our infrastructure\n\nDo not submit code containing secrets, credentials, private keys, personal data of third parties, or any information subject to confidentiality obligations. CodeScope is not responsible for any data contained in scan submissions.`,
+      heading: '6. Code and Repository Content',
+      body: `You retain ownership of the source code and other content you submit to CodeScope.\n\nBy submitting code or connecting a repository, you grant CodeScope a limited, non-exclusive, worldwide, royalty-free license to access, process, transmit, and analyze that content solely as necessary to provide the requested Service.\n\nThis license does not transfer ownership of your code to CodeScope.\n\nYou represent and warrant that you have the necessary rights and permissions to submit or authorize access to the content you provide.\n\nRepository access\n\nIf you connect a third-party repository, including a GitHub repository, you authorize CodeScope to access the repository information and contents necessary to perform the analysis you request.\n\nYou may revoke repository access through the relevant third-party platform.\n\nSensitive information\n\nYou should not submit secrets or sensitive information unnecessarily, including:\n\n• Passwords\n• API keys\n• Private keys\n• Authentication tokens\n• Database credentials\n• Personal information belonging to other individuals\n• Confidential information you are not authorized to disclose\n\nYou are responsible for reviewing content before submitting it to CodeScope.`,
     },
     {
-      heading: '7. Analysis Results and Disclaimers',
-      body: `Scan results are generated by automated tools and are provided "as is" without warranty of any kind. CodeScope:\n\n• Does not guarantee the accuracy, completeness, or fitness for a particular purpose of any analysis output\n• Does not warrant that all bugs, security vulnerabilities, or code quality issues will be detected\n• Is not a substitute for professional security audits, penetration testing, code review by qualified engineers, or legal advice\n\nYou are solely responsible for evaluating scan results and for any decisions you make based on them. Do not ship changes to production based solely on automated scan output without appropriate human review.`,
+      heading: '7. Code Processing and Third-Party Services',
+      body: `To provide CodeScope, submitted code and related information may be processed by third-party infrastructure and service providers.\n\nThese providers may include services used for:\n\n• Cloud hosting\n• Database storage\n• Repository access\n• Artificial intelligence analysis\n• Application monitoring and security\n\nThird-party providers process information according to their own terms and privacy policies and our instructions or agreements with them, where applicable.\n\nWhere CodeScope sends code or related information to an AI provider for analysis, that processing occurs solely to provide the requested analysis and subject to the applicable provider configuration and agreements.\n\nDetails about information collected and third-party services used by CodeScope are described in our Privacy Policy.`,
     },
     {
-      heading: '8. Intellectual Property',
-      body: `CodeScope, its logo, design, user interface, and underlying technology are owned by or licensed to us and are protected by copyright, trademark, and other intellectual property laws. These Terms do not grant you any right to use our name, logo, or other proprietary materials beyond what is necessary to use the Service as described.`,
+      heading: '8. Analysis Results',
+      body: `CodeScope analysis results are generated automatically and may contain errors, omissions, false positives, or false negatives.\n\nCodeScope does not guarantee that its analysis will:\n\n• Identify every vulnerability\n• Identify every bug\n• Correctly classify every issue\n• Produce complete or accurate results\n• Detect security problems\n• Produce optimal recommendations\n\nAnalysis results are provided for informational purposes only.\n\nYou are responsible for reviewing and validating analysis results before relying on them.\n\nYou should not deploy security-sensitive or production changes solely on the basis of CodeScope's automated analysis.`,
     },
     {
-      heading: '9. Termination',
-      body: `Either party may terminate the account relationship at any time. We reserve the right to suspend or terminate any account, with or without notice, that we reasonably believe has violated these Terms, poses a security risk, or is being used fraudulently. CodeScope does not currently offer a self-service account deletion feature; if you wish to stop using the Service you may simply stop using it.\n\nUpon termination, your right to use the Service ceases immediately. Provisions of these Terms that by their nature should survive termination will continue to apply.`,
+      heading: '9. Intellectual Property',
+      body: `CodeScope, including its software, interface, branding, logo, design, documentation, and underlying technology, is owned by or licensed to CodeScope and is protected by applicable intellectual property laws.\n\nExcept as expressly permitted by these Terms, you may not:\n\n• Copy or reproduce CodeScope\n• Redistribute the Service\n• Sell or sublicense the Service\n• Modify proprietary components\n• Remove proprietary notices\n• Use CodeScope branding without permission\n• Attempt to obtain source code from proprietary components\n\nNothing in these Terms transfers ownership of CodeScope's intellectual property to you.`,
     },
     {
-      heading: '10. Limitation of Liability',
-      body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL CODESCOPE OR ITS OPERATORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION LOSS OF PROFITS, DATA, REVENUE, GOODWILL, OR BUSINESS OPPORTUNITIES, ARISING OUT OF OR RELATED TO YOUR USE OF OR INABILITY TO USE THE SERVICE, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.\n\nIN NO EVENT SHALL OUR TOTAL CUMULATIVE LIABILITY FOR ALL CLAIMS ARISING OUT OF OR RELATED TO THE SERVICE, WHETHER IN CONTRACT, TORT, OR OTHERWISE, EXCEED THE GREATER OF (i) THE AMOUNT YOU PAID US (IF ANY) IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM, OR (ii) ONE HUNDRED DOLLARS ($100).\n\nTHE FOREGOING LIMITATIONS APPLY EVEN IF ANY REMEDY SET FORTH HEREIN FAILS OF ITS ESSENTIAL PURPOSE. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES, SO SOME OF THE ABOVE LIMITATIONS MAY NOT APPLY TO YOU.`,
+      heading: '10. User Feedback',
+      body: `If you voluntarily provide feedback, suggestions, feature requests, or other recommendations regarding CodeScope, you grant us permission to use that feedback without restriction or compensation to you.\n\nThis does not grant us ownership of your source code or other content submitted for analysis.`,
     },
     {
-      heading: '11. Disclaimer of Warranties',
-      body: `THE SERVICE, INCLUDING ALL CONTENT, ANALYSIS RESULTS, AND OUTPUT, IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CODESCOPE DISCLAIMS ALL WARRANTIES, INCLUDING WITHOUT LIMITATION ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND ACCURACY OR COMPLETENESS OF ANY ANALYSIS RESULTS.\n\nWE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE, OR THAT ANY ANALYSIS OUTPUT WILL BE CORRECT, COMPLETE, OR RELIABLE. ALL ANALYSIS RESULTS ARE AUTOMATED AND INFORMATIONAL ONLY, AND YOU USE THEM AT YOUR OWN RISK.`,
+      heading: '11. Service Availability',
+      body: `We attempt to keep CodeScope available and operational, but we do not guarantee that the Service will:\n\n• Always be available\n• Be uninterrupted\n• Be error-free\n• Be secure at all times\n• Be free from bugs or defects\n• Remain unchanged\n\nThe Service may occasionally be unavailable because of:\n\n• Maintenance\n• Updates\n• Infrastructure failures\n• Third-party service outages\n• Security incidents\n• Network failures\n• Events outside our reasonable control\n\nWe may modify, suspend, or discontinue portions of the Service at any time.`,
     },
     {
-      heading: '12. Governing Law and Disputes',
-      body: `These Terms are governed by and construed in accordance with applicable law. Any dispute arising from these Terms or your use of the Service shall first be addressed through whatever contact channel CodeScope makes available at that time. If a dispute cannot be resolved informally, both parties agree to submit to the jurisdiction of the relevant courts.`,
+      heading: '12. Free and Paid Features',
+      body: `CodeScope may provide free and paid features.\n\nWe may introduce, modify, or discontinue pricing, usage limits, features, or subscription plans.\n\nIf paid features are introduced, applicable pricing and billing terms will be presented before you are charged.\n\nUnless otherwise stated, fees are non-refundable except where required by applicable law or expressly provided by our refund policy.`,
     },
     {
-      heading: '13. Changes to Terms',
-      body: `We may revise these Terms at any time. When we make material changes we will update the "last updated" date. Your continued use of the Service following the effective date of revised Terms constitutes your acceptance of those Terms. If you do not agree to the revised Terms, you must stop using the Service.`,
+      heading: '13. Account Suspension and Termination',
+      body: `You may stop using CodeScope at any time.\n\nWe may suspend or terminate your access if we reasonably believe that:\n\n• You violated these Terms\n• Your use creates a security risk\n• Your use violates applicable law\n• Your account is being used fraudulently\n• Your activity threatens the availability or integrity of the Service\n\nWhere appropriate and reasonably practicable, we may provide notice before termination.\n\nUpon termination, your right to use the Service ends immediately.\n\nCertain provisions of these Terms that are intended to survive termination will remain in effect, including provisions concerning intellectual property, disclaimers, limitations of liability, and dispute resolution.`,
+    },
+    {
+      heading: '14. Account and Data Deletion',
+      body: `CodeScope may provide account deletion functionality as the Service develops.\n\nCodeScope does not currently provide self-service account deletion and does not currently provide a contact method for deletion requests.\n\nDeletion, when available, may be subject to:\n\n• Legal requirements\n• Security requirements\n• Fraud prevention\n• Backup retention periods\n• Technical limitations\n\nOur Privacy Policy describes how personal information and other data are retained and deleted.`,
+    },
+    {
+      heading: '15. Privacy',
+      body: `Your use of CodeScope is also governed by our Privacy Policy.\n\nThe Privacy Policy explains:\n\n• What information we collect\n• How we use information\n• How repository content is processed\n• How information is shared with service providers\n• How long information is retained\n• Your privacy rights\n\nIf there is a conflict between these Terms and the Privacy Policy concerning privacy matters, the Privacy Policy controls to the extent required by applicable law.`,
+    },
+    {
+      heading: '16. Security',
+      body: `We take reasonable measures designed to protect CodeScope and information processed through the Service.\n\nHowever, no online service or method of transmission can be guaranteed to be completely secure.\n\nYou are responsible for:\n\n• Protecting your account credentials\n• Using strong and unique passwords\n• Reviewing code before submitting it\n• Avoiding unnecessary submission of secrets\n• Maintaining appropriate security practices for connected third-party accounts`,
+    },
+    {
+      heading: '17. Third-Party Services',
+      body: `CodeScope may integrate with or rely upon third-party services, including repository hosting platforms, cloud infrastructure providers, databases, and AI services.\n\nThird-party services may have their own terms, privacy policies, availability limitations, and security practices.\n\nCodeScope is not responsible for the availability, functionality, or policies of third-party services that are outside our reasonable control.`,
+    },
+    {
+      heading: '18. Disclaimer of Warranties',
+      body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CODESCOPE IS PROVIDED "AS IS" AND "AS AVAILABLE."\n\nWE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, ACCURACY, RELIABILITY, AND AVAILABILITY.\n\nWE DO NOT WARRANT THAT:\n\n• THE SERVICE WILL BE UNINTERRUPTED\n• THE SERVICE WILL BE ERROR-FREE\n• THE SERVICE WILL BE SECURE\n• ANALYSIS RESULTS WILL BE ACCURATE\n• ALL VULNERABILITIES WILL BE IDENTIFIED\n• ALL BUGS WILL BE DETECTED\n• THE SERVICE WILL MEET YOUR PARTICULAR REQUIREMENTS\n\nSome jurisdictions do not permit certain warranty exclusions. To the extent such exclusions are prohibited, they will apply only to the maximum extent permitted by applicable law.`,
+    },
+    {
+      heading: '19. Limitation of Liability',
+      body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CODESCOPE AND ITS OPERATORS WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR LOSS OF PROFITS, REVENUE, DATA, GOODWILL, BUSINESS OPPORTUNITIES, OR OTHER INTANGIBLE LOSSES ARISING FROM OR RELATED TO YOUR USE OF THE SERVICE.\n\nTO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE TOTAL LIABILITY OF CODESCOPE AND ITS OPERATORS FOR CLAIMS ARISING FROM OR RELATED TO THE SERVICE WILL NOT EXCEED THE GREATER OF:\n\n• THE AMOUNT YOU PAID TO CODESCOPE FOR THE SERVICE DURING THE TWELVE MONTHS BEFORE THE EVENT GIVING RISE TO THE CLAIM; OR\n• CAD $1\n\nNothing in these Terms excludes or limits liability that cannot legally be excluded or limited under applicable law.`,
+    },
+    {
+      heading: '20. Indemnification',
+      body: `To the maximum extent permitted by applicable law, you agree to defend, indemnify, and hold harmless CodeScope and its operators from claims, damages, liabilities, losses, and expenses arising from:\n\n• Your violation of these Terms\n• Your misuse of the Service\n• Your violation of another person's rights\n• Your submission of content that you did not have permission to submit\n• Your violation of applicable laws or regulations\n\nThis section does not apply to the extent that a claim results from CodeScope's own unlawful conduct or negligence where such limitation is prohibited by law.`,
+    },
+    {
+      heading: '21. Changes to the Service',
+      body: `We may modify, update, suspend, or discontinue features of CodeScope at any time.\n\nWe may also change these Terms from time to time.\n\nWhen we make material changes, we will update the "Last updated" date and, where reasonably appropriate, provide additional notice.\n\nYour continued use of CodeScope after updated Terms become effective constitutes acceptance of the updated Terms, to the extent permitted by applicable law.\n\nIf you do not agree to updated Terms, you must stop using the Service.`,
+    },
+    {
+      heading: '22. Governing Law',
+      body: `These Terms are governed by the laws applicable in the jurisdiction in which CodeScope is operated, except to the extent that applicable law requires otherwise.\n\nNothing in these Terms limits rights or remedies that you may have under mandatory consumer protection or other applicable laws.`,
+    },
+    {
+      heading: '23. Severability',
+      body: `If any provision of these Terms is determined to be invalid or unenforceable, that provision will be enforced to the maximum extent permitted by law, and the remaining provisions will remain in full force and effect.`,
+    },
+    {
+      heading: '24. Entire Agreement',
+      body: `These Terms, together with the Privacy Policy and any additional terms applicable to specific CodeScope features, constitute the entire agreement between you and CodeScope concerning your use of the Service, except where otherwise required by applicable law.`,
     },
   ],
 }
