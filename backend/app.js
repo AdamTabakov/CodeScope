@@ -1,10 +1,12 @@
 import express from 'express'
 import helmet from 'helmet'
 import compression from 'compression'
+import cors from 'cors'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import apiRouter from './routes/api.js'
 import { errorHandler, apiNotFound } from './middleware/errorHandler.js'
+import { config } from './config/env.js'
 
 const app = express()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -31,6 +33,21 @@ app.use((request, response, next) => {
 app.use('/.well-known/appspecific/com.chrome.devtools.json', (_request, response) => {
   response.status(204).end()
 })
+
+// CORS: allow only the explicitly configured frontend origins. The browser
+// sends Authorization headers (Bearer tokens), so a wildcard is unacceptable.
+// Requests with no Origin (server-to-server, curl, health checks) are allowed.
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || config.corsOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+  }),
+)
 
 app.use(
   helmet({

@@ -61,10 +61,6 @@ const PRIVACY = {
       heading: '9. Changes to This Policy',
       body: `We may update this Privacy Policy as the Service evolves. When we make material changes we will update the "last updated" date at the top of this document. Continued use of the Service after the effective date of a revised policy constitutes your acceptance of the changes.`,
     },
-    {
-      heading: '10. Contact',
-      body: `For privacy-related questions or requests:\n\nEmail: privacy@codescope.io\n\nWe aim to respond to all privacy inquiries within 5 business days.`,
-    },
   ],
 }
 
@@ -119,10 +115,6 @@ const TERMS = {
     {
       heading: '12. Changes to Terms',
       body: `We may revise these Terms at any time. When we make material changes we will update the "last updated" date. Your continued use of the Service following the effective date of revised Terms constitutes your acceptance of those Terms. If you do not agree to the revised Terms, you must stop using the Service.`,
-    },
-    {
-      heading: '13. Contact',
-      body: `For questions about these Terms:\n\nEmail: legal@codescope.io\n\nWe aim to respond to all legal inquiries within 5 business days.`,
     },
   ],
 }

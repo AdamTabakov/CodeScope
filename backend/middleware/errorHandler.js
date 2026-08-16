@@ -10,6 +10,10 @@ const ERROR_MAP = [
   { match: (e) => e.status === 429 || e.statusCode === 429,
     status: 429, code: 'RATE_LIMITED',        message: 'Too many requests. Please slow down.' },
 
+  // CORS — origin not in the configured allowlist
+  { match: (e) => e.message === 'Not allowed by CORS',
+    status: 403, code: 'CORS_BLOCKED',        message: 'Request origin is not allowed.' },
+
   // express body-parser / JSON syntax
   { match: (e) => e.type === 'entity.too.large',
     status: 413, code: 'PAYLOAD_TOO_LARGE',   message: 'Request body is too large.' },

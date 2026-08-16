@@ -62,13 +62,47 @@ cd CodeScope
 cd backend
 npm install
 # create a .env file with MongoDB, JWT, GitHub, and OpenAI credentials
+# (see backend/.env.example for all variables, including CORS_ORIGINS)
 npm run dev
 
 # Frontend (in a new terminal)
 cd frontend
 npm install
+# create a frontend/.env with VITE_API_URL pointing at the backend origin
+# e.g. VITE_API_URL=http://localhost:3000
 npm run dev
 ```
+
+## Deployment
+
+### Backend (Render)
+
+1. Push the repo to GitHub and create a **Web Service** on [Render](https://render.com) pointing at the `backend/` directory.
+2. Build command: `npm install`
+3. Start command: `npm start`
+4. Set the following **environment variables**:
+
+   | Variable | Value |
+   |---|---|
+   | `MONGODB_URI` | Your MongoDB connection string (Atlas or local) |
+   | `JWT_SECRET` | Long random string — never share or commit it |
+   | `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_EMAIL` | Admin account seed values |
+   | `CORS_ORIGINS` | Your deployed frontend origin, e.g. `https://codescope-4yq.pages.dev` |
+   | `APP_URL` | Your deployed frontend URL (used in email verification links) |
+   | `RESEND_API_KEY` | Resend API key (email verification) |
+   | `EMAIL_FROM` | `CodeScope <onboarding@resend.dev>` or a verified sending domain |
+
+   Add `NODE_ENV=production` so errors are never exposed to clients.
+
+### Frontend (Cloudflare Pages)
+
+1. Create a **Cloudflare Pages** project connected to the repo, root = `frontend/`.
+2. Build command: `npm run build`
+3. Build output directory: `dist`
+4. Add the environment variable **`VITE_API_URL`** = your Render backend URL, e.g. `https://your-app.onrender.com`. Vite inlines it at build time, so set it as a **production** variable and redeploy after any change.
+5. Add `NODE_VERSION` (e.g. `20`) if the default build environment is too old.
+
+> The backend's `CORS_ORIGINS` must list the Cloudflare origin exactly (no trailing slash), and `VITE_API_URL` must point at the Render origin (no trailing slash, no `/api` suffix).
 
 ## Security
 

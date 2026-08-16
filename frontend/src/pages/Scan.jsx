@@ -91,7 +91,7 @@ function parseGitHubUrl(raw) {
 }
 
 async function uploadRepository(url, token) {
-  const response = await fetch('/api/repositories/upload', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/repositories/upload`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

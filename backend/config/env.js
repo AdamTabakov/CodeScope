@@ -19,4 +19,10 @@ export const config = {
   appUrl: process.env.APP_URL || 'http://localhost:3000',
   resendApiKey: process.env.RESEND_API_KEY || '',
   emailFrom: process.env.EMAIL_FROM || 'CodeScope <no-reply@codescope.local>',
+  // Comma-separated list of allowed browser origins for CORS. Never use "*" —
+  // the frontend sends Authorization headers, so only trusted origins are allowed.
+  corsOrigins: (process.env.CORS_ORIGINS || 'https://codescope-4yq.pages.dev')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 }
