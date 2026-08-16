@@ -121,6 +121,6 @@ npm run dev
 
 ## Author
 
-**Adam Tabakov** — Electrical Engineering @ Toronto Metropolitan University
+**Adam Tabakov** —  @ Toronto Metropolitan University
 
 [GitHub](https://github.com/AdamTabakov/CodeScope) · [LinkedIn](https://www.linkedin.com/in/adam-tabakov-85280b319/)
