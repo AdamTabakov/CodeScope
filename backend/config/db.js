@@ -26,6 +26,11 @@ export async function connectDb() {
 // Keep email uniqueness as a partial index that excludes any testing-allowlist
 // addresses. Everyone else still gets DB-level unique-email enforcement; only
 // the listed addresses may register more than once.
+//
+// Partial index filters only support a small operator set ($ne, $and, $or, ...)
+// — $nin/$not are not allowed — so each allowlisted address becomes its own
+// $ne constraint ANDed together. With an empty allowlist this behaves exactly
+// like a plain unique index.
 async function ensureEmailIndexes() {
   try {
     const indexes = await User.collection.indexes()
@@ -36,15 +41,17 @@ async function ensureEmailIndexes() {
       }
     }
 
-    // Unique on email except for allowlisted addresses (e.g. the developer's
-    // own email during testing). With an empty allowlist this behaves exactly
-    // like a plain unique index.
-    await User.collection.createIndex(
-      { email: 1 },
-      { unique: true, partialFilterExpression: { email: { $nin: config.duplicateEmailAllowlist } } },
-    )
-    if (config.duplicateEmailAllowlist.length > 0) {
-      console.warn(`[db] Duplicate email registration allowed only for: ${config.duplicateEmailAllowlist.join(', ')}`)
+    const allowlist = config.duplicateEmailAllowlist
+    const spec = { unique: true, key: { email: 1 } }
+    if (allowlist.length > 0) {
+      spec.partialFilterExpression =
+        allowlist.length === 1
+          ? { email: { $ne: allowlist[0] } }
+          : { $and: allowlist.map((email) => ({ email: { $ne: email } })) }
+    }
+    await User.collection.createIndex({ email: 1 }, spec)
+    if (allowlist.length > 0) {
+      console.warn(`[db] Duplicate email registration allowed only for: ${allowlist.join(', ')}`)
     }
   } catch (err) {
     console.warn('[db] Failed to adjust email indexes:', err.message)
