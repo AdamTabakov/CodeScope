@@ -1,4 +1,6 @@
-const BASE = `${import.meta.env.VITE_API_URL}/api`
+// Strip any trailing slashes from the configured API URL so a value like
+// "https://example.com/" can never produce a broken "//api" base.
+const BASE = `${String(import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')}/api`
 
 async function request(path, body) {
   let response
