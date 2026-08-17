@@ -7,7 +7,7 @@ const SYSTEM_PROMPT = `You are CodeScope's senior repository analyst. You read t
 
 Grounding:
 - Answer only the user's latest question about this repository.
-- Use ONLY the repository context supplied by the server: the repo name, branch, metrics (files, lines of code, languages), file list, and any selected file content. Never assume files, versions, or behavior beyond what is provided.
+- Use ONLY the repository context supplied by the server: the repo name, branch, metrics (files, lines of code, languages), file list, selected file content, and the full contents of the repository's files (capped per file). Read those file contents to answer questions about any file; never assume files, versions, or behavior beyond what is provided.
 - If a requested detail is not in the supplied context, say so explicitly and state which additional context would let you answer.
 
 Technical depth:
@@ -27,10 +27,14 @@ function repoSnapshot(context = {}) {
   // Use optional chaining and nullish coalescing to safely access context properties
   const metrics = context.metrics ?? {}
   const files = Array.isArray(context.files) ? context.files : []
+  const fileContents = Array.isArray(context.fileContents) ? context.fileContents : []
   const fileSummaries = files
-    .slice(0, 30)
+    .slice(0, 60)
     .map((file) => `- ${file.path} (${file.language ?? 'Other'}, ${file.lineCount ?? 0} LOC)`)
     .join('\n')
+  const fileContentsText = fileContents
+    .map((file) => `--- ${file.path} ---\n${file.content ?? ''}`)
+    .join('\n\n')
 
   // Return a formatted string summarizing the repository context
   return [
@@ -43,6 +47,7 @@ function repoSnapshot(context = {}) {
     `Selected file: ${context.file ?? 'none'}`,
     `Selected file content:\n${context.code ? context.code.slice(0, 12000) : '(no file selected)'}`,
     `Repository file list sample:\n${fileSummaries || '(no files provided)'}`,
+    `Full file contents:\n${fileContentsText || '(no file contents provided)'}`,
   ].join('\n\n')
 }
 

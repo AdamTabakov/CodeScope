@@ -244,19 +244,64 @@ export default function Scan({ navigate, user, token }) {
     setFileText(selectedFile?.content ?? '')
   }, [files, selectedPath])
 
-  const buildChatContext = (override = {}) => {
-    const activePath = override.selectedPath ?? selectedPath
-    const activeFile = override.files?.find((file) => file.path === activePath) ?? files.find((file) => file.path === activePath)
-    const activeMeta = override.meta ?? meta
-    return {
-      repo: activeMeta ? `${activeMeta.owner}/${activeMeta.repo}` : null,
-      branch: activeMeta?.branch,
-      file: activePath,
-      code: (activeFile?.content ?? fileText).slice(0, 12000),
-      files: (override.files ?? files).map(({ path, language, lineCount }) => ({ path, language, lineCount })),
-      metrics: override.metrics ?? metrics,
-    }
+// All file contents are sent with the chat context so the assistant can answer
+// questions about any file in the repository. Contents are capped per file and
+// in total to keep requests within the backend body limit and the model window.
+// Important manifests/configs are prioritized so their content is never dropped.
+const CHAT_IMPORTANT_FILE_PATTERNS = [
+  /^package\.json$/,
+  /^README(\.\w+)?$/i,
+  /^tsconfig\.json$/,
+  /^vite\.config\.[cm]?[jt]s$/,
+  /^webpack\.config\.[cm]?[jt]s$/,
+  /^requirements.*\.txt$/,
+  /^pyproject\.toml$/,
+  /^setup\.py$/,
+  /^Cargo\.toml$/,
+  /^go\.mod$/,
+  /^pom\.xml$/,
+  /^build\.gradle$/,
+  /^composer\.json$/,
+  /^Gemfile$/,
+  /^Dockerfile$/,
+  /^docker-compose\.ya?ml$/,
+  /^\.env\.example$/,
+  /^eslint\.config\.[cm]?[jt]s$/,
+  /^\.github\/workflows\/.+\.ya?ml$/,
+]
+const CHAT_MAX_FILE_CHARS = 6000
+const CHAT_MAX_CONTEXT_CHARS = 2000000
+
+const buildChatContext = (override = {}) => {
+  const activePath = override.selectedPath ?? selectedPath
+  const activeFile = override.files?.find((file) => file.path === activePath) ?? files.find((file) => file.path === activePath)
+  const activeMeta = override.meta ?? meta
+  const contextFiles = override.files ?? files
+  const prioritized = [...contextFiles].sort((a, b) => {
+    const aImportant = CHAT_IMPORTANT_FILE_PATTERNS.some((re) => re.test(a.path)) ? 0 : 1
+    const bImportant = CHAT_IMPORTANT_FILE_PATTERNS.some((re) => re.test(b.path)) ? 0 : 1
+    return aImportant - bImportant || a.path.localeCompare(b.path)
+  })
+  const fileContents = []
+  let budget = CHAT_MAX_CONTEXT_CHARS
+  for (const file of prioritized) {
+    if (budget <= 0) break
+    const content = (file.content ?? '').slice(0, CHAT_MAX_FILE_CHARS)
+    if (!content.trim()) continue
+    const slice = content.slice(0, budget)
+    fileContents.push({ path: file.path, content: slice })
+    budget -= slice.length + file.path.length + 2
   }
+  return {
+    repo: activeMeta ? `${activeMeta.owner}/${activeMeta.repo}` : null,
+    branch: activeMeta?.branch,
+    file: activePath,
+    code: (activeFile?.content ?? fileText).slice(0, 12000),
+    files: contextFiles.map(({ path, language, lineCount }) => ({ path, language, lineCount })),
+    fileContents,
+    metrics: override.metrics ?? metrics,
+  }
+}
 
 const patchMessage = (id, updater) =>
     setMessages((prev) => prev.map((m) => (m.id === id ? updater(m) : m)))
