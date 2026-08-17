@@ -1,5 +1,7 @@
 import { config } from '../config/env.js'
 
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
+
 // System Prompt
 const SYSTEM_PROMPT = `You are CodeScope's repository assistant.
 
@@ -36,7 +38,7 @@ function repoSnapshot(context = {}) {
   ].join('\n\n')
 }
 
-// Fallback answer when OpenAI API key is not set
+// Fallback answer when Gemini API key is not set
 function fallbackAnswer(message, context = {}) {
   const metrics = context.metrics ?? {}
   const languages = Array.isArray(metrics.languages) ? metrics.languages.join(', ') : 'Unknown'
@@ -58,12 +60,12 @@ function fallbackAnswer(message, context = {}) {
   return [
     `I can answer based on the loaded context for ${repo}.${file}`,
     `Available metrics: ${metrics.filesRetrieved ?? 0} files, ${metrics.linesOfCode ?? 0} LOC, languages: ${languages}.`,
-    'Set OPENAI_API_KEY on the backend to enable deeper AI analysis; without it, CodeScope returns this deterministic repository-aware fallback.',
+    'Set GEMINI_API_KEY on the backend to enable deeper AI analysis; without it, CodeScope returns this deterministic repository-aware fallback.',
   ].join('\n')
 }
 
 export async function streamAnswerCodeQuestion(message, context, onDelta, onDone) {
-  if (!config.openaiApiKey) {
+  if (!config.geminiApiKey) {
     // No API key — send the deterministic fallback as a single delta so the
     // client renders it through the same streaming path.
     onDelta(fallbackAnswer(message, context))
@@ -71,55 +73,54 @@ export async function streamAnswerCodeQuestion(message, context, onDelta, onDone
     return
   }
 
-  const response = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.openaiApiKey}`,
-    },
-    body: JSON.stringify({
-      model: config.openaiModel,
-      temperature: 0.1,
-      max_output_tokens: 700,
-      store: false,
-      stream: true,
-      instructions: SYSTEM_PROMPT,
-      input: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'input_text',
-              text: `Repository context supplied by server:\n\n${repoSnapshot(context)}\n\nUser question:\n${message}`,
-            },
-          ],
+  const response = await fetch(
+    `${GEMINI_BASE_URL}/models/${config.geminiModel}:streamGenerateContent?alt=sse`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': config.geminiApiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `Repository context supplied by server:\n\n${repoSnapshot(context)}\n\nUser question:\n${message}`,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 700,
         },
-      ],
-    }),
-  })
+      }),
+    },
+  )
 
-  // Check for errors in the OpenAI API response
+  // Check for errors in the Gemini API response
   if (!response.ok) {
     const body = await response.text()
-    throw new Error(`OpenAI request failed (${response.status}): ${body.slice(0, 200)}`)
+    throw new Error(`Gemini request failed (${response.status}): ${body.slice(0, 200)}`)
   }
 
   // Forward each text delta to the client and report the resolved model when
   // the stream completes.
-  let model = config.openaiModel
-  await streamOpenAiSse(response.body, (event, data) => {
-    if (event === 'response.output_text.delta' && data && typeof data.delta === 'string') {
-      onDelta(data.delta)
-    } else if (event === 'response.completed' && data?.response?.model) {
-      model = data.response.model
-    }
+  let model = config.geminiModel
+  await streamGeminiSse(response.body, (data) => {
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+    if (typeof text === 'string') onDelta(text)
+    if (data?.modelVersion) model = data.modelVersion
   })
   onDone({ model })
 }
 
-// Reads an OpenAI streaming response body and invokes callback(event, data)
-// for every SSE event block.
-async function streamOpenAiSse(body, onEvent) {
+// Reads a Gemini streaming response body (Server-Sent Events) and invokes
+// callback(data) with each parsed GenerateContentResponse chunk.
+async function streamGeminiSse(body, onData) {
   const reader = body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -130,28 +131,17 @@ async function streamOpenAiSse(body, onEvent) {
     buffer += decoder.decode(value, { stream: true })
 
     let sep
-    while ((sep = buffer.indexOf('\n\n')) !== -1) {
-      const block = buffer.slice(0, sep)
-      buffer = buffer.slice(sep + 2)
-      const { event, data } = parseSseBlock(block)
-      if (event || data) onEvent(event, data)
-    }
-  }
-
-  const { event, data } = parseSseBlock(buffer)
-  if (event || data) onEvent(event, data)
-}
-
-function parseSseBlock(block) {
-  let event = null
-  let data = null
-  for (const line of block.replace(/\r/g, '').split('\n')) {
-    if (line.startsWith('event:')) event = line.slice(6).trim()
-    else if (line.startsWith('data:')) {
+    while ((sep = buffer.indexOf('\n')) !== -1) {
+      const line = buffer.slice(0, sep)
+      buffer = buffer.slice(sep + 1)
+      if (!line.trim().startsWith('data:')) continue
       const raw = line.slice(5).trim()
-      if (raw === '[DONE]') continue
-      try { data = JSON.parse(raw) } catch { /* ignore malformed */ }
+      if (!raw) continue
+      try {
+        onData(JSON.parse(raw))
+      } catch {
+        // ignore malformed chunks
+      }
     }
   }
-  return { event, data }
 }

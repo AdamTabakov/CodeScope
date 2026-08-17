@@ -54,7 +54,7 @@ Environment variables containing secrets must remain server-side.
 
 Examples include:
 
-* `OPENAI_API_KEY`
+* `GEMINI_API_KEY`
 * GitHub tokens
 * Database credentials
 * API secrets
@@ -399,7 +399,7 @@ Provide `.env.example` when configuration needs to be documented.
 Example:
 
 ```env
-OPENAI_API_KEY=
+GEMINI_API_KEY=
 GITHUB_TOKEN=
 ```
 

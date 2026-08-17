@@ -25,7 +25,7 @@ const PRIVACY = {
         },
         {
           label: 'c) AI Processing',
-          text: 'To generate certain analysis results, relevant code and associated information may be transmitted to OpenAI\'s API.\n\nOpenAI processes information submitted through its API according to its applicable terms and privacy practices.\n\nCodeScope does not intentionally use submitted code to train or fine-tune artificial intelligence models.',
+          text: 'To generate certain analysis results, relevant code and associated information may be transmitted to Google\'s Gemini API.\n\nGoogle processes information submitted through its API according to its applicable terms and privacy practices.\n\nCodeScope does not intentionally use submitted code to train or fine-tune artificial intelligence models.',
         },
         {
           label: 'd) Usage and Technical Information',
@@ -43,7 +43,7 @@ const PRIVACY = {
     },
     {
       heading: '3. How We Share Information',
-      body: `We do not sell, rent, or share personal information with third parties for their own advertising purposes.\n\nInformation may be processed by service providers that help us operate CodeScope.\n\nThese providers may process information on our behalf for purposes such as:\n\n• Cloud hosting\n• Database infrastructure\n• Repository access\n• AI-powered analysis\n• Email delivery\n• Security and service reliability\n\nThese providers may process information according to their own terms and privacy policies.\n\nCurrent Third-Party Services\n\nCodeScope may use third-party services including:\n\n• Cloudflare — used for frontend hosting, content delivery, and related infrastructure.\n• Render — used to host CodeScope\'s backend application.\n• MongoDB — used to store account and application data.\n• GitHub — used to retrieve repository information and source code when a repository is analyzed through GitHub.\n• OpenAI — used to process relevant code and generate AI-assisted analysis.\n• Resend — used to send account-related emails, including verification emails.\n\nThe specific information transmitted to each provider depends on the functionality being used.`,
+      body: `We do not sell, rent, or share personal information with third parties for their own advertising purposes.\n\nInformation may be processed by service providers that help us operate CodeScope.\n\nThese providers may process information on our behalf for purposes such as:\n\n• Cloud hosting\n• Database infrastructure\n• Repository access\n• AI-powered analysis\n• Email delivery\n• Security and service reliability\n\nThese providers may process information according to their own terms and privacy policies.\n\nCurrent Third-Party Services\n\nCodeScope may use third-party services including:\n\n• Cloudflare — used for frontend hosting, content delivery, and related infrastructure.\n• Render — used to host CodeScope\'s backend application.\n• MongoDB — used to store account and application data.\n• GitHub — used to retrieve repository information and source code when a repository is analyzed through GitHub.\n• Google Gemini — used to process relevant code and generate AI-assisted analysis.\n• Resend — used to send account-related emails, including verification emails.\n\nThe specific information transmitted to each provider depends on the functionality being used.`,
     },
     {
       heading: '4. Code Retention',

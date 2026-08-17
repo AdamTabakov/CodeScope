@@ -14,8 +14,8 @@ export const config = {
   adminPassword: process.env.ADMIN_PASSWORD, // no fallback — must come from .env
   adminEmail: process.env.ADMIN_EMAIL || 'adam@codescope.local',
   mongoUri: process.env.MONGODB_URI || '',
-  openaiApiKey: process.env.OPENAI_API_KEY || '',
-  openaiModel: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   appUrl: process.env.APP_URL || 'http://localhost:3000',
   resendApiKey: process.env.RESEND_API_KEY || '',
   emailFrom: process.env.EMAIL_FROM || 'CodeScope <no-reply@codescope.local>',

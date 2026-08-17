@@ -6,7 +6,7 @@ AI-powered GitHub repository analysis — ask questions about any codebase in pl
 ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-412991?logo=openai&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)
 
 ## Overview
 
@@ -40,7 +40,7 @@ CodeScope ingests a GitHub repository, maps its file structure, and exposes an A
 | Frontend | React, Vite, Axios |
 | Backend | Node.js, Express, JWT, bcrypt, Helmet |
 | Database | MongoDB, Mongoose |
-| APIs | GitHub REST API, OpenAI API |
+| APIs | GitHub REST API, Google Gemini API |
 
 ## Architecture
 
@@ -61,7 +61,7 @@ cd CodeScope
 # Backend
 cd backend
 npm install
-# create a .env file with MongoDB, JWT, GitHub, and OpenAI credentials
+# create a .env file with MongoDB, JWT, GitHub, and Gemini credentials
 # (see backend/.env.example for all variables, including CORS_ORIGINS)
 npm run dev
 
@@ -91,6 +91,8 @@ npm run dev
    | `APP_URL` | Your deployed frontend URL (used in email verification links) |
    | `RESEND_API_KEY` | Resend API key (email verification) |
    | `EMAIL_FROM` | `CodeScope <onboarding@resend.dev>` or a verified sending domain |
+   | `GEMINI_API_KEY` | Google AI Studio API key for AI chat (free tier available) |
+   | `GEMINI_MODEL` | Optional; defaults to `gemini-2.5-flash` |
 
    Add `NODE_ENV=production` so errors are never exposed to clients.
 
