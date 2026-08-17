@@ -1864,7 +1864,7 @@ a:hover {
 
 /* Chat panel */
 .scan-chat {
-  width: 320px;
+  width: 520px;
   flex-shrink: 0;
   border-left: 1px solid var(--border);
   display: flex;
@@ -1883,6 +1883,20 @@ a:hover {
   cursor: col-resize;
   touch-action: none;
   z-index: 5;
+}
+.scan-chat__resizer::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+  transition: background var(--transition);
+}
+.scan-chat__resizer:hover::before,
+.scan-chat__resizer:active::before {
+  background: var(--primary);
 }
 .scan-chat__resizer:hover {
   background: rgba(110, 125, 150, 0.18);
@@ -1993,6 +2007,80 @@ a:hover {
   border: 1px solid var(--border);
   color: var(--subtle);
   border-bottom-left-radius: 4px;
+}
+
+/* Rendered markdown inside assistant bubbles */
+.chat-md {
+  white-space: normal;
+}
+.chat-md__p {
+  margin: 0 0 0.5rem;
+}
+.chat-md__p:last-child {
+  margin-bottom: 0;
+}
+.chat-md__heading {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text);
+  font-weight: 700;
+}
+.chat-md__heading--1,
+.chat-md__heading--2 {
+  font-size: 0.92rem;
+}
+.chat-md__list {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.1rem;
+}
+.chat-md__list:last-child {
+  margin-bottom: 0;
+}
+.chat-md__list li {
+  margin: 0.15rem 0;
+}
+.chat-md__code {
+  margin: 0.35rem 0 0.5rem;
+  padding: 0.5rem 0.625rem;
+  background: rgba(110, 125, 150, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.chat-md__code:last-child {
+  margin-bottom: 0;
+}
+.chat-md code {
+  background: rgba(110, 125, 150, 0.12);
+  border-radius: 4px;
+  padding: 0 0.25em;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+}
+.chat-md pre code {
+  background: none;
+  padding: 0;
+}
+.chat-md__hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.5rem 0;
+}
+.chat-md__quote {
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.1rem 0 0.1rem 0.6rem;
+  border-left: 2px solid var(--primary);
+  color: var(--muted);
+}
+.chat-md a {
+  color: var(--primary);
+  text-decoration: underline;
+  word-break: break-all;
 }
 
 /* Thinking dots */
@@ -2121,6 +2209,7 @@ a:hover {
     position: fixed;
     right: 0; top: 64px; bottom: 0;
     z-index: 50;
+    max-width: 100vw;
   }
 }
 

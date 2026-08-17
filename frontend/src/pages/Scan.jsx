@@ -194,6 +194,186 @@ const QUICK_CHIPS = [
   'Rate the complexity',
 ]
 
+// ── Chat markdown ─────────────────────────────────────────────────────────────
+// Lightweight Markdown renderer for assistant messages. Builds React elements
+// directly (never raw HTML) so model output is styled safely.
+const INLINE_TOKEN = /(\*\*[^*]+\*\*|~~[^~]+~~|`[^`]+`|\*[^*\n]+\*|\[[^\]]+\]\([^)]+\))/g
+const LINK_TOKEN = /^\[([^\]]+)\]\(([^)]+)\)$/
+
+function renderInline(text, keyPrefix) {
+  INLINE_TOKEN.lastIndex = 0
+  const nodes = []
+  let lastIndex = 0
+  let key = 0
+  let match
+  while ((match = INLINE_TOKEN.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index))
+    }
+    const token = match[0]
+    let el = null
+    if (token.startsWith('**') && token.endsWith('**')) {
+      el = <strong key={`${keyPrefix}-${key++}`}>{token.slice(2, -2)}</strong>
+    } else if (token.startsWith('~~') && token.endsWith('~~')) {
+      el = <del key={`${keyPrefix}-${key++}`}>{token.slice(2, -2)}</del>
+    } else if (token.startsWith('`') && token.endsWith('`')) {
+      el = <code key={`${keyPrefix}-${key++}`}>{token.slice(1, -1)}</code>
+    } else if (token.startsWith('*') && token.endsWith('*')) {
+      el = <em key={`${keyPrefix}-${key++}`}>{token.slice(1, -1)}</em>
+    } else if (token.startsWith('[')) {
+      const link = LINK_TOKEN.exec(token)
+      if (link) {
+        el = (
+          <a key={`${keyPrefix}-${key++}`} href={link[2]} target="_blank" rel="noopener noreferrer">
+            {link[1]}
+          </a>
+        )
+      }
+    }
+    if (el) {
+      nodes.push(el)
+    } else {
+      nodes.push(token)
+    }
+    lastIndex = INLINE_TOKEN.lastIndex
+  }
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex))
+  }
+  // Preserve explicit line breaks inside paragraphs/lists.
+  const flattened = []
+  nodes.forEach((node) => {
+    if (typeof node !== 'string') {
+      flattened.push(node)
+    } else {
+      node.split('\n').forEach((part, idx) => {
+        if (idx > 0) flattened.push(<br key={`${keyPrefix}-br${key++}`} />)
+        if (part) flattened.push(part)
+      })
+    }
+  })
+  return flattened
+}
+
+function ChatMarkdown({ text }) {
+  if (!text) return null
+  const lines = text.split('\n')
+  const blocks = []
+  let i = 0
+  let key = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Fenced code block
+    const fence = /^```/.test(line)
+    if (fence) {
+      const code = []
+      i += 1
+      while (i < lines.length && !/^```/.test(lines[i])) {
+        code.push(lines[i])
+        i += 1
+      }
+      i += 1 // skip the closing fence
+      blocks.push(<pre key={key++} className="chat-md__code"><code>{code.join('\n')}</code></pre>)
+      continue
+    }
+
+    // Heading
+    const heading = /^(#{1,4})\s+(.*)$/.exec(line)
+    if (heading) {
+      const level = heading[1].length
+      blocks.push(
+        <h4 key={key++} className={`chat-md__heading chat-md__heading--${level}`}>
+          {renderInline(heading[2], `h${key}`)}
+        </h4>,
+      )
+      i += 1
+      continue
+    }
+
+    // Horizontal rule
+    if (/^(\s*([-*_])\s*){3,}$/.test(line)) {
+      blocks.push(<hr key={key++} className="chat-md__hr" />)
+      i += 1
+      continue
+    }
+
+    // Blockquote
+    if (line.startsWith('>')) {
+      const quote = []
+      while (i < lines.length && lines[i].startsWith('>')) {
+        quote.push(lines[i].replace(/^>\s?/, ''))
+        i += 1
+      }
+      blocks.push(
+        <blockquote key={key++} className="chat-md__quote">
+          <ChatMarkdown text={quote.join('\n')} />
+        </blockquote>,
+      )
+      continue
+    }
+
+    // Bullet list
+    if (/^\s*[-*+]\s+/.test(line)) {
+      const items = []
+      while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-*+]\s+/, ''))
+        i += 1
+      }
+      blocks.push(
+        <ul key={key++} className="chat-md__list">
+          {items.map((item, idx) => (
+            <li key={idx}>{renderInline(item, `li${key}-${idx}`)}</li>
+          ))}
+        </ul>,
+      )
+      continue
+    }
+
+    // Ordered list
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = []
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''))
+        i += 1
+      }
+      blocks.push(
+        <ol key={key++} className="chat-md__list">
+          {items.map((item, idx) => (
+            <li key={idx}>{renderInline(item, `ol${key}-${idx}`)}</li>
+          ))}
+        </ol>,
+      )
+      continue
+    }
+
+    // Paragraph
+    const para = []
+    while (
+      i < lines.length &&
+      lines[i].trim() !== '' &&
+      !/^```/.test(lines[i]) &&
+      !/^(#{1,4})\s/.test(lines[i]) &&
+      !/^(\s*([-*_])\s*){3,}$/.test(lines[i]) &&
+      !lines[i].startsWith('>') &&
+      !/^\s*[-*+]\s+/.test(lines[i]) &&
+      !/^\s*\d+\.\s+/.test(lines[i])
+    ) {
+      para.push(lines[i])
+      i += 1
+    }
+    if (para.length) {
+      blocks.push(<p key={key++} className="chat-md__p">{renderInline(para.join('\n'), `p${key}`)}</p>)
+      continue
+    }
+
+    i += 1
+  }
+
+  return <div className="chat-md">{blocks}</div>
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Scan({ navigate, user, token, initialUrl = '', initialProjectId = null, onRepoOpened }) {
@@ -220,7 +400,7 @@ export default function Scan({ navigate, user, token, initialUrl = '', initialPr
   const [saveState, setSaveState] = useState('idle') // 'idle' | 'saving' | 'saved' | 'error'
   const [chatWidth, setChatWidth] = useState(() => {
     const saved = Number(window.localStorage.getItem('codescope:chatWidth'))
-    return Number.isFinite(saved) && saved >= 260 && saved <= 760 ? saved : 380
+    return Number.isFinite(saved) && saved >= 320 && saved <= 1000 ? saved : 520
   })
 
   const messagesEndRef = useRef(null)
@@ -619,7 +799,7 @@ const buildChatContext = (override = {}) => {
     const startX = e.clientX
     const startWidth = chatWidth
     const onMove = (ev) => {
-      setChatWidth(Math.min(760, Math.max(260, startWidth + (startX - ev.clientX))))
+      setChatWidth(Math.min(1000, Math.max(320, startWidth + (startX - ev.clientX))))
     }
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)
@@ -843,7 +1023,9 @@ const buildChatContext = (override = {}) => {
                     {showFileRef && (
                       <span className="chat-msg__file-ref">re: {filename}</span>
                     )}
-                    <div className="chat-msg__bubble">{msg.content}</div>
+                    <div className="chat-msg__bubble">
+                      {msg.role === 'assistant' ? <ChatMarkdown text={msg.content} /> : msg.content}
+                    </div>
                   </div>
                 )
               })}
