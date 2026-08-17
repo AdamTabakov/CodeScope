@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { streamChat } from '../services/api.js'
+import { streamChat, saveProject, getProject } from '../services/api.js'
 
 // ── Inline icons (no icon library) ───────────────────────────────────────────
 const iconProps = {
@@ -196,11 +196,11 @@ const QUICK_CHIPS = [
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function Scan({ navigate, user, token }) {
+export default function Scan({ navigate, user, token, initialUrl = '', initialProjectId = null, onRepoOpened }) {
   const [url, setUrl] = useState('')
   const [status, setStatus] = useState({ state: 'idle', message: '' })
   const [warnings, setWarnings] = useState([])
-  const [meta, setMeta] = useState(null)         // { owner, repo, branch }
+  const [meta, setMeta] = useState(null)         // { owner, repo, branch, fullName, url }
   const [tree, setTree] = useState(null)
   const [files, setFiles] = useState([])
   const [metrics, setMetrics] = useState(null)
@@ -215,9 +215,24 @@ export default function Scan({ navigate, user, token }) {
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
 
+  // Saved project state
+  const [project, setProject] = useState(null)       // { id, repoUrl, fullName, ... }
+  const [saveState, setSaveState] = useState('idle') // 'idle' | 'saving' | 'saved' | 'error'
+  const [chatWidth, setChatWidth] = useState(() => {
+    const saved = Number(window.localStorage.getItem('codescope:chatWidth'))
+    return Number.isFinite(saved) && saved >= 260 && saved <= 760 ? saved : 380
+  })
+
   const messagesEndRef = useRef(null)
   const pasteTimeoutRef = useRef(null)
   const chatHasOpened = useRef(false)
+  const autoLoadRef = useRef(false)
+  const restoreHandled = useRef(false)
+
+  // Persist the chosen chat width across sessions.
+  useEffect(() => {
+    window.localStorage.setItem('codescope:chatWidth', String(chatWidth))
+  }, [chatWidth])
 
   // Auto-scroll to bottom when messages change or loading state toggles
   useEffect(() => {
@@ -303,8 +318,29 @@ const buildChatContext = (override = {}) => {
   }
 }
 
-const patchMessage = (id, updater) =>
-    setMessages((prev) => prev.map((m) => (m.id === id ? updater(m) : m)))
+  // Save the current scan (repo metadata, metrics, file list, chat history) to
+  // the user's account so it can be reopened later from the dashboard.
+  const persistProject = async (messagesToSave) => {
+    if (!token || !meta || !files.length) return
+    const repoUrl = `https://github.com/${meta.owner}/${meta.repo}`
+    const fullName = meta.fullName ?? `${meta.owner}/${meta.repo}`
+    setSaveState('saving')
+    try {
+      const { project: saved } = await saveProject({
+        repoUrl,
+        fullName,
+        branch: meta.branch,
+        meta: { owner: meta.owner, repo: meta.repo, branch: meta.branch, fullName, url: repoUrl },
+        metrics,
+        files: files.map(({ path, language, lineCount }) => ({ path, language, lineCount })),
+        messages: (messagesToSave ?? messages).map((m) => ({ role: m.role, content: m.content, file: m.file ?? null })),
+      }, token)
+      setProject(saved)
+      setSaveState('saved')
+    } catch {
+      setSaveState('error')
+    }
+  }
 
   const requestAssistant = async ({ message, context, onDelta }) => {
     const reply = await streamChat({ message, context, token, onDelta })
@@ -383,6 +419,39 @@ const patchMessage = (id, updater) =>
     }
   }
 
+  // Load the repository tree + file contents into local state (no AI call).
+  const loadRepositoryFiles = async (targetUrl = url) => {
+    if (!targetUrl.trim()) return null
+    if (!token) throw new Error('Sign in before uploading a repository link.')
+
+    const data = await uploadRepository(targetUrl, token)
+    const paths = data.files.map((file) => file.path)
+    const newWarnings = []
+
+    if (data.metrics.truncated) {
+      newWarnings.push(`Showing first ${data.metrics.filesRetrieved} of ${data.metrics.totalFiles} files (binary files excluded).`)
+    }
+    if (data.metrics.rateLimitRemaining !== null) {
+      newWarnings.push(`GitHub API calls: ${data.metrics.apiCalls}. Rate limit remaining: ${data.metrics.rateLimitRemaining}.`)
+    }
+
+    setTree(data.tree)
+    setMeta(data.meta)
+    setFiles(data.files)
+    setMetrics(data.metrics)
+    setSelectedPath(paths[0] ?? '')
+    setExpanded(new Set(['repo']))
+    setWarnings(newWarnings)
+    setStatus({
+      state: 'success',
+      message: `${data.metrics.filesRetrieved} files / ${data.metrics.linesOfCode} LOC from ${data.meta.fullName} - ${data.meta.branch}`,
+    })
+
+    onRepoOpened?.({ url: data.meta.url, fullName: data.meta.fullName, branch: data.meta.branch })
+
+    return { data, paths }
+  }
+
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault()
     if (!url.trim()) return
@@ -397,36 +466,15 @@ const patchMessage = (id, updater) =>
     setFileText('')
 
     try {
-      if (!token) throw new Error('Sign in before uploading a repository link.')
+      const { data, paths } = await loadRepositoryFiles()
 
-      const data = await uploadRepository(url, token)
-      const paths = data.files.map((file) => file.path)
-      const newWarnings = []
-
-      if (data.metrics.truncated) {
-        newWarnings.push(`Showing first ${data.metrics.filesRetrieved} of ${data.metrics.totalFiles} files (binary files excluded).`)
-      }
-      if (data.metrics.rateLimitRemaining !== null) {
-        newWarnings.push(`GitHub API calls: ${data.metrics.apiCalls}. Rate limit remaining: ${data.metrics.rateLimitRemaining}.`)
-      }
-
-      setTree(data.tree)
-      setMeta(data.meta)
-      setFiles(data.files)
-      setMetrics(data.metrics)
-      setSelectedPath(paths[0] ?? '')
-      setExpanded(new Set(['repo']))
-      setWarnings(newWarnings)
-      setStatus({
-        state: 'success',
-        message: `${data.metrics.filesRetrieved} files / ${data.metrics.linesOfCode} LOC from ${data.meta.fullName} - ${data.meta.branch}`,
-      })
-
-setChatOpen(true)
+      setChatOpen(true)
       setChatLoading(true)
       const summaryId = Date.now()
-      setMessages([{ id: summaryId, role: 'assistant', content: '', file: null }])
+      const summaryMsg = { id: summaryId, role: 'assistant', content: '', file: null }
+      setMessages([summaryMsg])
       chatHasOpened.current = true
+      let finalMessages = [summaryMsg]
       try {
         const summary = await requestAssistant({
           message: 'Summarize this repository. Focus on purpose, structure, languages, notable files, and what I should inspect first.',
@@ -437,21 +485,70 @@ setChatOpen(true)
             selectedPath: paths[0] ?? '',
           }),
           onDelta: (delta) =>
-            patchMessage(summaryId, (m) => ({ ...m, content: m.content + delta })),
+            setMessages((prev) => prev.map((m) => (m.id === summaryId ? { ...m, content: m.content + delta } : m))),
         })
-        patchMessage(summaryId, (m) => ({ ...m, content: summary }))
+        finalMessages = [{ ...summaryMsg, content: summary }]
+        setMessages(finalMessages)
       } catch {
-        patchMessage(summaryId, (m) => ({
-          ...m,
+        finalMessages = [{
+          ...summaryMsg,
           content: `${data.meta.fullName} loaded with ${data.metrics.filesRetrieved} files, ${data.metrics.linesOfCode} LOC, and these languages: ${data.metrics.languages.join(', ')}. Ask about architecture, bugs, tests, security, or a selected file.`,
-        }))
+        }]
+        setMessages(finalMessages)
       } finally {
         setChatLoading(false)
       }
+      persistProject(finalMessages)
     } catch (err) {
       setStatus({ state: 'error', message: err.message || 'Could not load that repository.' })
     }
   }
+
+  // When arriving with a repo URL (recent repo), auto-load it.
+  useEffect(() => {
+    if (autoLoadRef.current) return
+    if (initialUrl && !initialProjectId) {
+      autoLoadRef.current = true
+      setUrl(initialUrl)
+    }
+  }, [initialUrl, initialProjectId])
+
+  // When opened from a saved project, restore chat history and repo metadata.
+  useEffect(() => {
+    if (!initialProjectId || !token || restoreHandled.current) return
+    restoreHandled.current = true
+    ;(async () => {
+      try {
+        const { project: loaded } = await getProject(initialProjectId, token)
+        setProject(loaded)
+        const restored = (loaded.messages ?? []).map((m, i) => ({
+          id: Date.now() + i,
+          role: m.role,
+          content: m.content,
+          file: m.file ?? null,
+        }))
+        setMessages(restored)
+        chatHasOpened.current = true
+        setChatOpen(true)
+        if (loaded.repoUrl) {
+          setUrl(loaded.repoUrl)
+          loadRepositoryFiles(loaded.repoUrl).catch(() => {
+            setStatus({ state: 'error', message: 'Chat history restored, but repository files could not be reloaded.' })
+          })
+        }
+      } catch {
+        // Project could not be loaded; fall back to a normal scan page.
+      }
+    })()
+  }, [initialProjectId, token])
+
+  // Actually trigger the repo load once a URL is in place.
+  useEffect(() => {
+    if (autoLoadRef.current && url && status.state !== 'loading') {
+      autoLoadRef.current = false
+      handleSubmit(null)
+    }
+  }, [url, status.state])
 
   // Auto-submit on paste if value looks like a GitHub URL
   const handlePaste = (e) => {
@@ -480,27 +577,30 @@ setChatOpen(true)
   const sendMessage = async (content) => {
     if (!content.trim() || chatLoading || !token) return
 
-const userMsg = { id: Date.now(), role: 'user', content: content.trim(), file: selectedPath }
-    setMessages((prev) => [...prev, userMsg])
+    const userMsg = { id: Date.now(), role: 'user', content: content.trim(), file: selectedPath }
+    const assistantId = Date.now() + 1
+    const assistantMsg = { id: assistantId, role: 'assistant', content: '', file: selectedPath }
+    const pending = [...messages, userMsg, assistantMsg]
+    setMessages(pending)
     setChatInput('')
     setChatLoading(true)
 
-    const assistantId = Date.now() + 1
-    setMessages((prev) => [...prev, { id: assistantId, role: 'assistant', content: '', file: selectedPath }])
+    const applyFinal = (reply) => {
+      const finalMessages = pending.map((m) => (m.id === assistantId ? { ...m, content: reply } : m))
+      setMessages(finalMessages)
+      persistProject(finalMessages)
+    }
 
     try {
       const reply = await requestAssistant({
         message: content.trim(),
         context: buildChatContext(),
         onDelta: (delta) =>
-          patchMessage(assistantId, (m) => ({ ...m, content: m.content + delta })),
+          setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + delta } : m))),
       })
-      patchMessage(assistantId, (m) => ({ ...m, content: reply }))
+      applyFinal(reply)
     } catch {
-      patchMessage(assistantId, (m) => ({
-        ...m,
-        content: "I couldn't connect to the analysis service. Make sure you're logged in and the backend is running.",
-      }))
+      applyFinal("I couldn't connect to the analysis service. Make sure you're logged in and the backend is running.")
     } finally {
       setChatLoading(false)
     }
@@ -511,6 +611,22 @@ const userMsg = { id: Date.now(), role: 'user', content: content.trim(), file: s
       e.preventDefault()
       sendMessage(chatInput)
     }
+  }
+
+  // Drag the left edge of the chat panel to resize it.
+  const startResize = (e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = chatWidth
+    const onMove = (ev) => {
+      setChatWidth(Math.min(760, Math.max(260, startWidth + (startX - ev.clientX))))
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
   }
 
   const rootNodes = useMemo(() => tree?.children ?? [], [tree])
@@ -685,20 +801,37 @@ const userMsg = { id: Date.now(), role: 'user', content: content.trim(), file: s
 
         {/* Chat panel */}
         {chatOpen && (
-          <aside className="scan-chat">
+          <aside className="scan-chat" style={{ width: chatWidth }}>
+            <div
+              className="scan-chat__resizer"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize chat panel"
+              onPointerDown={startResize}
+            />
             <div className="scan-chat__header">
               <span className="scan-chat__title">
                 <span className="scan-chat__title-dot" />
                 Code Assistant
               </span>
-              <button
-                type="button"
-                className="scan-chat__close"
-                onClick={() => setChatOpen(false)}
-                aria-label="Close chat"
-              >
-                <IconClose />
-              </button>
+              <span className="scan-chat__header-right">
+                {project && saveState === 'saved' && (
+                  <span
+                    className="scan-chat__saved"
+                    title="This project and its chat history are saved to your account."
+                  >
+                    Saved
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="scan-chat__close"
+                  onClick={() => setChatOpen(false)}
+                  aria-label="Close chat"
+                >
+                  <IconClose />
+                </button>
+              </span>
             </div>
 
             <div className="scan-chat__messages">

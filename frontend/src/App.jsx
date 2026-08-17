@@ -38,12 +38,29 @@ const ERROR_LABELS = {
 }
 const viewLabel = (type) => ERROR_LABELS[type] ?? 'Something went wrong'
 
+// Map a view to a browser URL so back/forward navigation works.
+const pathFor = (target) => {
+  const map = {
+    home: '/',
+    login: '/login',
+    signup: '/signup',
+    dashboard: '/dashboard',
+    scan: '/scan',
+    forgot: '/forgot',
+    reset: '/reset',
+    verify: '/verify',
+    error: '/error',
+  }
+  return map[target] ?? '/'
+}
+
 export default function App() {
   const [view, setView] = useState('home')
   const [auth, setAuth] = useState({ token: null, user: null })
   const [legalPage, setLegalPage] = useState(null)
   const [errorState, setErrorState] = useState({ type: 404, message: '' })
   const [scanUrl, setScanUrl] = useState('')
+  const [scanProjectId, setScanProjectId] = useState(null)
   const [resetToken, setResetToken] = useState('')
   const [verifyToken, setVerifyToken] = useState('')
   const [recentRepos, setRecentRepos] = useState(() => {
@@ -81,8 +98,8 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [])
 
-  // If the app is opened from an emailed link, route straight to the matching
-  // view with the emailed token. Verification links are `${APP_URL}/verify?token=...`,
+  // Initial routing: route the current URL to the matching view and seed the
+  // history entry. Verification links are `${APP_URL}/verify?token=...`,
   // password-reset links are `${APP_URL}/reset?token=...`. The token is removed
   // from the address bar immediately so it doesn't linger in the URL or browser
   // history after the page has captured it.
@@ -90,23 +107,29 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
     const pathname = window.location.pathname
-    if (token) {
-      if (pathname.includes('/verify')) {
-        setVerifyToken(token)
-        setView('verify')
-      } else if (pathname.includes('/reset')) {
-        setResetToken(token)
-        setView('reset')
-      }
 
-      // Strip the token from the URL now that it's held in memory.
-      params.delete('token')
-      const search = params.toString()
-      window.history.replaceState(null, '', `${pathname}${search ? `?${search}` : ''}`)
+    let initialView = 'home'
+    if (token && pathname.includes('/verify')) {
+      setVerifyToken(token)
+      initialView = 'verify'
+    } else if (token && pathname.includes('/reset')) {
+      setResetToken(token)
+      initialView = 'reset'
+    } else {
+      const key = pathname.replace(/^\//, '').split('/')[0]
+      if (KNOWN_VIEWS.has(key)) initialView = key
     }
+
+    params.delete('token')
+    const search = params.toString()
+    window.history.replaceState({ view: initialView }, '', `${pathname}${search ? `?${search}` : ''}`)
+    setView(initialView)
   }, [])
 
   const navigate = (target, opts = {}) => {
+    // A signed-in user never lands on the marketing home page — send them to
+    // the dashboard instead.
+    if (target === 'home' && auth.user) target = 'dashboard'
     if (!KNOWN_VIEWS.has(target)) {
       setErrorState({ type: 404, message: `Unknown route: ${target}` })
       setView('error')
@@ -122,7 +145,24 @@ export default function App() {
       setErrorState({ type: opts.errorType, message: opts.errorMessage ?? '' })
     }
     setView(target)
+    window.history.pushState({ view: target }, '', pathFor(target))
   }
+
+  // Browser back/forward (and Alt+Left/Right arrow keys) restore the view.
+  useEffect(() => {
+    const onPop = (event) => {
+      const target = event.state?.view
+      if (!target || !KNOWN_VIEWS.has(target)) return
+      if (AUTH_REQUIRED.has(target) && !auth.user) {
+        setErrorState({ type: 401, message: 'Sign in to access this page.' })
+        setView('error')
+        return
+      }
+      setView(target)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [auth.user])
 
   const rememberRepo = (repo) => {
     setRecentRepos((prev) => {
@@ -136,7 +176,20 @@ export default function App() {
   }
 
   const openRecentRepo = (repoUrl) => {
+    setScanProjectId(null)
     setScanUrl(repoUrl)
+    navigate('scan')
+  }
+
+  const openProject = (project) => {
+    setScanProjectId(project.id)
+    setScanUrl(project.repoUrl)
+    navigate('scan')
+  }
+
+  const openNewScan = () => {
+    setScanProjectId(null)
+    setScanUrl('')
     navigate('scan')
   }
 
@@ -146,18 +199,19 @@ export default function App() {
   const handleAuthSuccess = ({ token, user }) => {
     setAuth({ token, user })
     setView('dashboard')
+    window.history.pushState({ view: 'dashboard' }, '', pathFor('dashboard'))
   }
 
   const handleSignOut = () => {
     setAuth({ token: null, user: null })
     setView('home')
+    window.history.pushState({ view: 'home' }, '', pathFor('home'))
   }
 
   // Called by any page that receives a structured API error
   const handleApiError = (status, message) => {
     const type = [401, 403, 429, 500, 503].includes(status) ? status : 500
-    setErrorState({ type, message })
-    setView('error')
+    navigate('error', { errorType: type, errorMessage: message })
   }
 
   const renderPage = () => {
@@ -218,8 +272,9 @@ export default function App() {
             openLegal={openLegal}
             navigate={navigate}
             onApiError={handleApiError}
-            recentRepos={recentRepos}
-            onOpenRepo={openRecentRepo}
+            token={auth.token}
+            onOpenProject={openProject}
+            onNewScan={openNewScan}
           />
         )
       case 'scan':
@@ -230,6 +285,7 @@ export default function App() {
             token={auth.token}
             onApiError={handleApiError}
             initialUrl={scanUrl}
+            initialProjectId={scanProjectId}
             onRepoOpened={rememberRepo}
           />
         )

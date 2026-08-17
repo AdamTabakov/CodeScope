@@ -37,6 +37,41 @@ async function request(path, body) {
   return data
 }
 
+// Generic authenticated fetch for the project endpoints (GET/DELETE support).
+async function apiFetch(path, { method = 'GET', body, token } = {}) {
+  let response
+  try {
+    response = await fetch(`${BASE}${path}`, {
+      method,
+      headers: {
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    throw new Error('Could not reach the server. Make sure the backend is running.')
+  }
+
+  let data = {}
+  const text = await response.text()
+  if (text.trim()) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new Error(`Server returned an unexpected response (HTTP ${response.status}). The backend may be down.`)
+    }
+  }
+
+  if (!response.ok) {
+    const err = new Error(data.error || `Request failed (${response.status}).`)
+    err.field = data.field ?? null
+    throw err
+  }
+
+  return data
+}
+
 export function login(identifier, password) {
   return request('/login', { identifier, password })
 }
@@ -73,6 +108,22 @@ export function requestPasswordReset(email) {
 
 export function resetPassword({ token, password, confirmPassword }) {
   return request('/reset-password', { token, password, confirmPassword })
+}
+
+export function saveProject(payload, token) {
+  return apiFetch('/projects', { method: 'POST', body: payload, token })
+}
+
+export function listProjects(token) {
+  return apiFetch('/projects', { token })
+}
+
+export function getProject(id, token) {
+  return apiFetch(`/projects/${encodeURIComponent(id)}`, { token })
+}
+
+export function deleteProject(id, token) {
+  return apiFetch(`/projects/${encodeURIComponent(id)}`, { method: 'DELETE', token })
 }
 
 /**

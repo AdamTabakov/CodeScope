@@ -108,7 +108,7 @@ export async function streamAnswerCodeQuestion(message, context, onDelta, onDone
         ],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 700,
+          maxOutputTokens: 4096,
         },
       }),
     },

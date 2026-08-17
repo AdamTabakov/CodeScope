@@ -21,7 +21,7 @@ const PRIVACY = {
         },
         {
           label: 'b) Repository and Scan Information',
-          text: 'When you submit code or request an analysis, CodeScope may process:\n\n• Source code\n• File contents\n• File paths\n• Repository URLs\n• Repository metadata\n• Information necessary to perform the requested analysis\n\nCode submitted for analysis is transmitted to CodeScope\'s servers for processing.\n\nFor repository-based analysis, CodeScope may retrieve repository information and source files from GitHub or another supported repository provider.\n\nCodeScope processes this information solely for purposes related to providing the requested analysis and operating the Service.',
+          text: 'When you submit code or request an analysis, CodeScope may process:\n\n• Source code\n• File contents\n• File paths\n• Repository URLs\n• Repository metadata\n• Information necessary to perform the requested analysis\n\nCode submitted for analysis is transmitted to CodeScope\'s servers for processing.\n\nFor repository-based analysis, CodeScope may retrieve repository information and source files from GitHub or another supported repository provider.\n\nCodeScope processes this information solely for purposes related to providing the requested analysis and operating the Service.\n\nSaved projects\n\nWhen you scan a repository, CodeScope may save a project to your account containing the repository URL and metadata, the file list, analysis metrics, and your chat history (questions and answers) so you can reopen it later. Source-code file contents themselves are not permanently stored — they are re-fetched from GitHub when you reopen a project. You can delete a saved project at any time from your dashboard.',
         },
         {
           label: 'c) AI Processing',
@@ -47,7 +47,7 @@ const PRIVACY = {
     },
     {
       heading: '4. Code Retention',
-      body: `CodeScope is designed not to permanently store source-code submissions or completed scan results on its application servers.\n\nWhen an analysis is completed, the resulting information is returned to the user\'s browser rather than being maintained as a permanent scan history by CodeScope.\n\nHowever, code and related information may temporarily exist in application memory, network infrastructure, processing systems, logs, caches, or third-party services as necessary to provide the requested functionality, maintain security, or comply with applicable legal obligations.\n\nThird-party providers may maintain information according to their own retention policies and applicable agreements.\n\nBecause of this, users should not submit passwords, API keys, private keys, authentication tokens, database credentials, confidential information, or other sensitive information unless they are authorized to do so and understand the associated risks.`,
+      body: `CodeScope does not permanently store source-code file contents on its application servers.\n\nWhen an analysis is completed, the resulting information is returned to the user\'s browser. If you have an account, CodeScope may save a project containing the repository URL and metadata, the file list, analysis metrics, and your chat history (questions and answers) so you can reopen it later. Saved projects and chat history can be deleted at any time from your dashboard, and are removed when your account is deleted.\n\nHowever, code and related information may temporarily exist in application memory, network infrastructure, processing systems, logs, caches, or third-party services as necessary to provide the requested functionality, maintain security, or comply with applicable legal obligations.\n\nThird-party providers may maintain information according to their own retention policies and applicable agreements.\n\nBecause of this, users should not submit passwords, API keys, private keys, authentication tokens, database credentials, confidential information, or other sensitive information unless they are authorized to do so and understand the associated risks.`,
     },
     {
       heading: '5. Account Data Retention',
@@ -75,7 +75,7 @@ const PRIVACY = {
     },
     {
       heading: '11. Account Deletion',
-      body: `CodeScope does not currently provide a self-service account deletion feature.\n\nWe intend to implement a self-service account deletion mechanism in a future version of the Service. Once implemented, users will be able to request deletion of their account and associated personal information through the Service.\n\nUntil that functionality is available, there is no mechanism for submitting account or data deletion requests.\n\nWhen an account is deleted, we will delete or anonymize associated personal information where reasonably possible and where we are not required to retain it for legal, security, fraud-prevention, or other legitimate purposes.`,
+      body: `CodeScope does not currently provide a self-service account deletion feature.\n\nWe intend to implement a self-service account deletion mechanism in a future version of the Service. Once implemented, users will be able to request deletion of their account and associated personal information through the Service.\n\nUntil that functionality is available, there is no mechanism for submitting account or data deletion requests.\n\nWhen an account is deleted, we will delete or anonymize associated personal information where reasonably possible and where we are not required to retain it for legal, security, fraud-prevention, or other legitimate purposes.\n\nThis includes saved projects and chat history associated with the account.`,
     },
     {
       heading: '12. International Processing',
@@ -162,7 +162,7 @@ const TERMS = {
     },
     {
       heading: '14. Account and Data Deletion',
-      body: `CodeScope may provide account deletion functionality as the Service develops.\n\nCodeScope does not currently provide self-service account deletion and does not currently provide a contact method for deletion requests.\n\nDeletion, when available, may be subject to:\n\n• Legal requirements\n• Security requirements\n• Fraud prevention\n• Backup retention periods\n• Technical limitations\n\nOur Privacy Policy describes how personal information and other data are retained and deleted.`,
+      body: `CodeScope may provide account deletion functionality as the Service develops.\n\nCodeScope does not currently provide self-service account deletion and does not currently provide a contact method for deletion requests.\n\nDeletion, when available, may be subject to:\n\n• Legal requirements\n• Security requirements\n• Fraud prevention\n• Backup retention periods\n• Technical limitations\n\nSaved projects and their chat history can be deleted directly from your dashboard at any time.\n\nOur Privacy Policy describes how personal information and other data are retained and deleted.`,
     },
     {
       heading: '15. Privacy',

@@ -6,6 +6,12 @@ import { forgotPasswordLimiter, resetPasswordLimiter } from '../middleware/passw
 import { requireAuth } from '../middleware/auth.js'
 import { chatLimiter, chat } from '../controllers/chatController.js'
 import { repositoryLimiter, uploadRepository } from '../controllers/repositoryController.js'
+import {
+  saveProjectEndpoint,
+  listProjectsEndpoint,
+  getProjectEndpoint,
+  deleteProjectEndpoint,
+} from '../controllers/projectController.js'
 
 // Create a new router instance
 const router = Router()
@@ -19,5 +25,9 @@ router.post('/forgot-password', forgotPasswordLimiter, forgotPassword)
 router.post('/reset-password', resetPasswordLimiter, resetPasswordEndpoint)
 router.post('/chat', chatLimiter, requireAuth, chat)
 router.post('/repositories/upload', repositoryLimiter, requireAuth, uploadRepository)
+router.post('/projects', requireAuth, saveProjectEndpoint)
+router.get('/projects', requireAuth, listProjectsEndpoint)
+router.get('/projects/:id', requireAuth, getProjectEndpoint)
+router.delete('/projects/:id', requireAuth, deleteProjectEndpoint)
 
 export default router

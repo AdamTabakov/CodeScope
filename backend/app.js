@@ -66,8 +66,10 @@ app.use(
 )
 // Chat requests carry the full repository context (all file contents), so they
 // need a much larger body limit than the other endpoints. Must run before the
-// global parser so the larger limit wins for /api/chat.
+// global parser so the larger limit wins for /api/chat. Saved projects include
+// the full chat history, so they get a generous limit too.
 app.use('/api/chat', express.json({ limit: '10mb', strict: true }))
+app.use('/api/projects', express.json({ limit: '5mb', strict: true }))
 app.use(express.json({ limit: '256kb', strict: true }))
 
 // gzip-compress responses. Server-Sent Events must never be compressed (it

@@ -779,6 +779,98 @@ a:hover {
   margin-top: 2rem;
 }
 
+/* Saved project list */
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.project-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.9rem 1.1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.project-card:hover {
+  border-color: rgba(110, 125, 150, 0.4);
+  background: rgba(110, 125, 150, 0.06);
+}
+
+.project-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: rgba(110, 125, 150, 0.1);
+  color: var(--primary-hover);
+  flex-shrink: 0;
+}
+
+.project-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.project-card__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card__meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.project-card__date {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.project-card__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+.project-card__delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* ─── Code Slideshow ────────────────────────────────────────────────────────── */
 
 /* Phase 1 — exit: content lifts, blurs, and fades out */
@@ -1778,6 +1870,36 @@ a:hover {
   display: flex;
   flex-direction: column;
   background: var(--surface);
+  position: relative;
+}
+
+/* Drag handle on the left edge of the chat panel */
+.scan-chat__resizer {
+  position: absolute;
+  left: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 5;
+}
+.scan-chat__resizer:hover {
+  background: rgba(110, 125, 150, 0.18);
+}
+
+.scan-chat__header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scan-chat__saved {
+  font-size: 0.68rem;
+  color: var(--green);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .scan-chat__header {
