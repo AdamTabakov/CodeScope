@@ -11,10 +11,8 @@ const userSchema = new mongoose.Schema(
       maxlength: 32,
       trim: true,
     },
-    // Define the email field with validation and constraints. Uniqueness is
-    // enforced at the service layer (isEmailTaken) plus a partial unique index
-    // (see config/db.js) so the testing allowlist can exempt specific
-    // addresses without weakening uniqueness for everyone else.
+
+    // email address of the user
     email: {
       type: String,
       required: true,
@@ -26,27 +24,29 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // Email verification status. New accounts start unverified until they
-    // follow the link sent to their inbox. Stored as a hash so a database
-    // leak cannot be replayed to verify an account.
+
+    // email verification status
     emailVerified: {
       type: Boolean,
       default: false,
     },
+    // email verification token hash
     emailVerificationTokenHash: {
       type: String,
       default: null,
     },
+    // email verification token expiration date
     emailVerificationTokenExpires: {
       type: Date,
       default: null,
     },
-    // Password reset flow. Works like email verification: only a SHA-256 hash
-    // of the emailed token is stored, and it expires after a short window.
+
+    // password reset token hash
     resetPasswordTokenHash: {
       type: String,
       default: null,
     },
+    // password reset token expiration date
     resetPasswordTokenExpires: {
       type: Date,
       default: null,

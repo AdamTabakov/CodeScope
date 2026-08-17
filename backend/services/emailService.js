@@ -16,25 +16,29 @@ import { config } from '../config/env.js'
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 
+// Construct a verification URL for the given token.
 export function buildVerificationUrl(token) {
   const base = config.appUrl.replace(/\/+$/, '')
   return `${base}/verify?token=${encodeURIComponent(token)}`
 }
 
+// Construct a password reset URL for the given token.
 export function buildPasswordResetUrl(token) {
   const base = config.appUrl.replace(/\/+$/, '')
   return `${base}/reset?token=${encodeURIComponent(token)}`
 }
 
+// Send a password reset email to the given address.
 export async function sendPasswordResetEmail({ to, username, token }) {
   const link = buildPasswordResetUrl(token)
 
+  // If no Resend API key is configured, log the link for local testing.
   if (!config.resendApiKey) {
-    // Dev fallback: print the link so the flow is still testable locally.
     console.log(`[email] (dev fallback) Password reset for ${to}:\n  ${link}`)
     return { sent: false, link }
   }
 
+  // Send the email using Resend.
   try {
     const response = await fetch(RESEND_ENDPOINT, {
       method: 'POST',
@@ -59,6 +63,7 @@ export async function sendPasswordResetEmail({ to, username, token }) {
       }),
     })
 
+    // If the response is not OK, log the error and return false.
     if (!response.ok) {
       const body = await response.text()
       console.error('[email] Resend send failed:', response.status, body.slice(0, 300))
@@ -70,17 +75,16 @@ export async function sendPasswordResetEmail({ to, username, token }) {
     return { sent: false, link }
   }
 }
-
+// Send a verification email to the given address.
 export async function sendVerificationEmail({ to, username, token }) {
   const link = buildVerificationUrl(token)
 
+  // If no Resend API key is configured, log the link for local testing.
   if (!config.resendApiKey) {
-    // Dev fallback: no email provider configured — print the link so the flow
-    // is still testable locally. Never expose this in production logs.
     console.log(`[email] (dev fallback) Verification for ${to}:\n  ${link}`)
     return { sent: false, link }
   }
-
+  // Send the email using Resend.
   try {
     const response = await fetch(RESEND_ENDPOINT, {
       method: 'POST',
@@ -115,7 +119,7 @@ export async function sendVerificationEmail({ to, username, token }) {
     return { sent: false, link }
   }
 }
-
+// Escape HTML to prevent XSS attacks.
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')

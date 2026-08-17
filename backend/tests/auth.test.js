@@ -6,8 +6,9 @@ import { config } from '../config/env.js'
 
 let server
 let baseUrl
-
+// Test suite for the auth API.
 describe('auth api', () => {
+  // Setup: start the server and get the base URL.
   before(async () => {
     server = app.listen(0)
     await new Promise((resolve) => server.once('listening', resolve))
@@ -15,10 +16,12 @@ describe('auth api', () => {
     baseUrl = `http://127.0.0.1:${port}`
   })
 
+  // Teardown: close the server.
   after(async () => {
     await new Promise((resolve) => server.close(resolve))
   })
 
+  // Test: logs in the seeded admin and returns a valid JWT.
   it('logs in the seeded admin and returns a valid JWT', async () => {
     const response = await fetch(`${baseUrl}/api/login`, {
       method: 'POST',
@@ -39,6 +42,7 @@ describe('auth api', () => {
     assert.equal(decoded.role, 'admin')
   })
 
+  // Test: rejects MongoDB operator-shaped identifiers.
   it('rejects MongoDB operator-shaped identifiers', async () => {
     const response = await fetch(`${baseUrl}/api/login`, {
       method: 'POST',
@@ -49,6 +53,7 @@ describe('auth api', () => {
     assert.equal(response.status, 400)
   })
 
+  // Test: rejects invalid credentials.
   it('rejects invalid credentials', async () => {
     const response = await fetch(`${baseUrl}/api/login`, {
       method: 'POST',
@@ -59,9 +64,8 @@ describe('auth api', () => {
     assert.equal(response.status, 401)
   })
 
+  // Test: forgot-password accepts a well-formed email and hides account existence.
   it('forgot-password accepts a well-formed email and hides account existence', async () => {
-    // Registered and unregistered addresses must produce identical responses so
-    // the endpoint cannot be used to enumerate accounts.
     const unknown = await fetch(`${baseUrl}/api/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -77,7 +81,7 @@ describe('auth api', () => {
     assert.equal(known.status, 200)
     assert.deepEqual(await unknown.json(), await known.json())
   })
-
+  // Test: forgot-password rejects an invalid email.
   it('forgot-password rejects an invalid email', async () => {
     const response = await fetch(`${baseUrl}/api/forgot-password`, {
       method: 'POST',
@@ -88,6 +92,7 @@ describe('auth api', () => {
     assert.equal(response.status, 400)
   })
 
+  // Test: forgot-password rejects non-object payloads.
   it('forgot-password rejects non-object payloads', async () => {
     const response = await fetch(`${baseUrl}/api/forgot-password`, {
       method: 'POST',
@@ -98,6 +103,7 @@ describe('auth api', () => {
     assert.equal(response.status, 400)
   })
 
+  // Test: reset-password rejects a short/missing token.
   it('reset-password rejects a short/missing token', async () => {
     const response = await fetch(`${baseUrl}/api/reset-password`, {
       method: 'POST',
@@ -108,6 +114,7 @@ describe('auth api', () => {
     assert.equal(response.status, 400)
   })
 
+  // Test: reset-password rejects a weak new password.
   it('reset-password rejects a weak new password', async () => {
     const response = await fetch(`${baseUrl}/api/reset-password`, {
       method: 'POST',
@@ -122,6 +129,7 @@ describe('auth api', () => {
     assert.equal(response.status, 400)
   })
 
+  // Test: reset-password rejects mismatched confirmation.
   it('reset-password rejects mismatched confirmation', async () => {
     const response = await fetch(`${baseUrl}/api/reset-password`, {
       method: 'POST',
@@ -136,9 +144,8 @@ describe('auth api', () => {
     assert.equal(response.status, 400)
   })
 
+  // Test: reset-password fails closed when the token is unknown.
   it('reset-password fails closed when the token is unknown', async () => {
-    // No DB is connected during tests, so the service returns the generic
-    // invalid-token error rather than a 500.
     const response = await fetch(`${baseUrl}/api/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

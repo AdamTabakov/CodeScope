@@ -8,9 +8,7 @@ import Home from './pages/Home.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
 import { VIEW_META } from './meta.js'
 
-// Non-landing pages are code-split and fetched on first navigation so the
-// initial bundle stays small (Home and ErrorPage stay eager: Home is the
-// landing page, ErrorPage is needed synchronously by the ErrorBoundary).
+// Lazy load the views that are not the landing page
 const Login = lazy(() => import('./pages/Login.jsx'))
 const Signup = lazy(() => import('./pages/Signup.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
@@ -22,7 +20,7 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail.jsx'))
 // Views that require the user to be signed in
 const AUTH_REQUIRED = new Set(['dashboard', 'scan'])
 
-// All known views — anything else gets a 404
+// All known views
 const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error', 'forgot', 'reset', 'verify'])
 
 // Short human labels used when composing error-page <title>s.
@@ -54,6 +52,7 @@ const pathFor = (target) => {
   return map[target] ?? '/'
 }
 
+// Export App
 export default function App() {
   const [view, setView] = useState('home')
   const [auth, setAuth] = useState({ token: null, user: null })
@@ -98,11 +97,7 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Initial routing: route the current URL to the matching view and seed the
-  // history entry. Verification links are `${APP_URL}/verify?token=...`,
-  // password-reset links are `${APP_URL}/reset?token=...`. The token is removed
-  // from the address bar immediately so it doesn't linger in the URL or browser
-  // history after the page has captured it.
+  // useEffect to handle initial routing based on the current URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
@@ -127,15 +122,14 @@ export default function App() {
   }, [])
 
   const navigate = (target, opts = {}) => {
-    // A signed-in user never lands on the marketing home page — send them to
-    // the dashboard instead.
+    // A signed-in user never lands on the marketing home page
     if (target === 'home' && auth.user) target = 'dashboard'
     if (!KNOWN_VIEWS.has(target)) {
       setErrorState({ type: 404, message: `Unknown route: ${target}` })
       setView('error')
       return
     }
-    // Auth guard: redirect to 401 error if the view requires login
+    // redirect to 401 error if the view requires login
     if (AUTH_REQUIRED.has(target) && !auth.user) {
       setErrorState({ type: 401, message: 'Sign in to access this page.' })
       setView('error')
@@ -164,6 +158,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [auth.user])
 
+  // Remember a repo for the "Recent Repos" feature
   const rememberRepo = (repo) => {
     setRecentRepos((prev) => {
       const next = [
@@ -174,34 +169,38 @@ export default function App() {
       return next
     })
   }
-
+  // Open a recent repo from the "Recent Repos" list
   const openRecentRepo = (repoUrl) => {
     setScanProjectId(null)
     setScanUrl(repoUrl)
     navigate('scan')
   }
-
+  // Open a project from the dashboard
   const openProject = (project) => {
     setScanProjectId(project.id)
     setScanUrl(project.repoUrl)
     navigate('scan')
   }
 
+  // Open a new scan
   const openNewScan = () => {
     setScanProjectId(null)
     setScanUrl('')
     navigate('scan')
   }
 
+  // Open the legal page or close it
   const openLegal = (page) => setLegalPage(page)
   const closeLegal = () => setLegalPage(null)
 
+  // Handle successful authentication
   const handleAuthSuccess = ({ token, user }) => {
     setAuth({ token, user })
     setView('dashboard')
     window.history.pushState({ view: 'dashboard' }, '', pathFor('dashboard'))
   }
 
+  // Handle sign out
   const handleSignOut = () => {
     setAuth({ token: null, user: null })
     setView('home')
@@ -214,8 +213,9 @@ export default function App() {
     navigate('error', { errorType: type, errorMessage: message })
   }
 
+  // Render the current page based on the view and auth state
   const renderPage = () => {
-    // Auth guard check — belt-and-suspenders on top of navigate()
+    // if the view requires auth and the user is not authenticated, show an error
     if (AUTH_REQUIRED.has(view) && !auth.user) {
       return (
         <ErrorPage

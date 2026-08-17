@@ -32,19 +32,18 @@ async function collectSse(response) {
   }
   return { reply, model }
 }
-
+// Test: chat api.
 describe('chat api', () => {
+  // Test: chat api.
   before(async () => {
     server = app.listen(0)
     await new Promise((resolve) => server.once('listening', resolve))
     const { port } = server.address()
     baseUrl = `http://127.0.0.1:${port}`
   })
-
   after(async () => {
     await new Promise((resolve) => server.close(resolve))
   })
-
   it('streams a preview assistant response for authenticated repo context', async () => {
     const response = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',
@@ -65,7 +64,7 @@ describe('chat api', () => {
     assert.match(reply, /acme\/demo/)
     assert.match(reply, /src\/app\.js/)
   })
-
+  // test if unauthenticated requests are rejected
   it('requires authentication', async () => {
     const response = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',

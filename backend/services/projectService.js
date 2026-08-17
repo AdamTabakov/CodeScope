@@ -15,7 +15,6 @@ function normalize(payload = {}) {
   if (!repoUrl || !fullName) {
     throw new Error('Project requires a repository URL and full name.')
   }
-
   const meta = payload.meta && typeof payload.meta === 'object'
     ? {
         owner: stringOr(payload.meta.owner, 256),
@@ -25,7 +24,6 @@ function normalize(payload = {}) {
         url: stringOr(payload.meta.url, 2048, repoUrl),
       }
     : { fullName, url: repoUrl, branch: payload.branch ?? null }
-
   const files = Array.isArray(payload.files)
     ? payload.files.slice(0, 800).map((file) => ({
         path: stringOr(file.path, 1024),
@@ -33,6 +31,7 @@ function normalize(payload = {}) {
         lineCount: Number(file.lineCount) || 0,
       }))
     : []
+
 
   const messages = Array.isArray(payload.messages)
     ? payload.messages
@@ -48,8 +47,7 @@ function normalize(payload = {}) {
   return { repoUrl, fullName, branch: meta.branch, meta, files, messages }
 }
 
-// Create or update the user's project for a repository. Messages are replaced
-// wholesale (the client sends the full history each time).
+// Save or update the user's project for a repository.
 export async function saveProject(userId, payload) {
   const data = normalize(payload)
   const project = await Project.findOneAndUpdate(
@@ -69,7 +67,7 @@ export async function saveProject(userId, payload) {
   )
   return project
 }
-
+// List all projects for a user, sorted by last update.
 export async function listProjects(userId) {
   const projects = await Project.find({ user: userId })
     .sort({ updatedAt: -1 })
@@ -89,13 +87,14 @@ export async function listProjects(userId) {
   }))
 }
 
+// Get a specific project by ID for a user.
 export async function getProject(userId, projectId) {
   if (!mongoose.isValidObjectId(projectId)) throw new Error('Project not found.')
   const project = await Project.findOne({ _id: projectId, user: userId }).lean()
   if (!project) throw new Error('Project not found.')
   return project
 }
-
+// Delete a project by ID for a user.
 export async function deleteProject(userId, projectId) {
   if (!mongoose.isValidObjectId(projectId)) throw new Error('Project not found.')
   const result = await Project.deleteOne({ _id: projectId, user: userId })

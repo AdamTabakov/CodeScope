@@ -1,6 +1,4 @@
-// Per-view <head> metadata used to keep titles + descriptions accurate
-// across the state-driven SPA. Keyed by the same names used in App's
-// KNOWN_VIEWS / navigate().
+// view metadata
 export const VIEW_META = {
   home: {
     title: 'CodeScope | Code scanning in plain English',

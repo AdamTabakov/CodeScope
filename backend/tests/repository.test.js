@@ -8,6 +8,7 @@ afterEach(() => {
   globalThis.fetch = originalFetch
 })
 
+// Test: repository service.
 describe('repository service', () => {
   it('parses GitHub repository URLs with branch paths', () => {
     assert.deepEqual(parseGitHubUrl('github.com/openai/codex/tree/main/packages/cli'), {
@@ -18,6 +19,7 @@ describe('repository service', () => {
     })
   })
 
+  // test if repository tree is loaded and code metrics are returned
   it('loads a repository tree and returns code metrics', async () => {
     const calls = []
     globalThis.fetch = async (url) => {
@@ -44,11 +46,11 @@ describe('repository service', () => {
           ],
         }, { headers })
       }
-
+      // test if raw file contents are fetched correctly
       if (url === 'https://raw.githubusercontent.com/acme/demo/main/src/app.js') {
         return new Response('const answer = 42\nconsole.log(answer)\n', { headers })
       }
-
+      // test if raw file contents are fetched correctly
       if (url === 'https://raw.githubusercontent.com/acme/demo/main/src/styles.css') {
         return new Response('body {\n  margin: 0;\n}\n', { headers })
       }

@@ -9,22 +9,24 @@ import apiRouter from './routes/api.js'
 import { errorHandler, apiNotFound } from './middleware/errorHandler.js'
 import { config } from './config/env.js'
 
+// Initialize the Express app.
 const app = express()
 
-// Trust the first proxy hop. Production is deployed behind a reverse proxy
-// (Render) that sets X-Forwarded-For; without this, express-rate-limit cannot
-// derive the client IP and fails with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+// Trust the first proxy hop for rate limiting and CORS origin validation.
 app.set('trust proxy', 1)
+
+// Resolve the path to the frontend dist folder.
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendDist = path.resolve(__dirname, '../frontend/dist')
-// The backend only serves the built frontend when it is co-located (local dev).
-// In production the frontend is deployed separately (e.g. Cloudflare Pages),
-// so the dist folder is absent and static serving must be skipped entirely.
+
+// Check if the frontend dist folder exists.
 const servesFrontend = fs.existsSync(path.join(frontendDist, 'index.html'))
 const healthBody = '{"status":"ok","service":"codescope-homepage"}'
 
+// Disable the X-Powered-By header to avoid exposing the server technology.
 app.disable('x-powered-by')
 
+// Serve the health endpoint.
 app.use((request, response, next) => {
   if (request.method === 'GET' && request.url === '/api/health') {
     response.statusCode = 200
@@ -36,17 +38,12 @@ app.use((request, response, next) => {
   next()
 })
 
-// Chrome DevTools sends a harmless "Automatic Workspace Folders" probe to this
-// well-known path on localhost. We answer it with 204 so the request doesn't
-// surface as a CSP violation / 404 in the console. See:
-// https://developer.chrome.com/docs/devtools/automatic-workspaces
+// Remove the Chrome DevTools probe endpoint.
 app.use('/.well-known/appspecific/com.chrome.devtools.json', (_request, response) => {
   response.status(204).end()
 })
 
-// CORS: allow only the explicitly configured frontend origins. The browser
-// sends Authorization headers (Bearer tokens), so a wildcard is unacceptable.
-// Requests with no Origin (server-to-server, curl, health checks) are allowed.
+// CORS: allow only the explicitly configured frontend origins.
 app.use(
   cors({
     origin(origin, callback) {
@@ -64,16 +61,13 @@ app.use(
     contentSecurityPolicy: false,
   }),
 )
-// Chat requests carry the full repository context (all file contents), so they
-// need a much larger body limit than the other endpoints. Must run before the
-// global parser so the larger limit wins for /api/chat. Saved projects include
-// the full chat history, so they get a generous limit too.
+
+// Parse request bodies with the appropriate size limits.
 app.use('/api/chat', express.json({ limit: '10mb', strict: true }))
 app.use('/api/projects', express.json({ limit: '5mb', strict: true }))
 app.use(express.json({ limit: '256kb', strict: true }))
 
 // gzip-compress responses. Server-Sent Events must never be compressed (it
-// buffers the stream and breaks token delivery), so the chat stream is excluded.
 app.use(
   compression({
     threshold: 1024,
@@ -89,14 +83,9 @@ app.use(
 app.use('/api', apiRouter)
 
 // Return JSON 404 for any /api/* path that didn't match a route
-// (must come before the static-file handler, which would otherwise serve index.html)
 app.use('/api', apiNotFound)
 
-// Static assets with cache headers:
-//  - hashed build files under /assets/ are content-addressed → immutable
-//  - brand images (favicon, og-image) are stable but may change → short cache
-//  - everything else is revalidated (no-cache)
-// Skipped entirely when the frontend is not co-located (see servesFrontend above).
+// Serve static assets with cache headers when the frontend is co-located.
 if (servesFrontend) {
   app.use(
     express.static(frontendDist, {

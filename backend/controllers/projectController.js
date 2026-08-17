@@ -1,5 +1,6 @@
 import { saveProject, listProjects, getProject, deleteProject } from '../services/projectService.js'
 
+// Save the project endpoint
 export async function saveProjectEndpoint(req, res, next) {
   try {
     const project = await saveProject(req.user.sub, req.body ?? {})
@@ -12,6 +13,7 @@ export async function saveProjectEndpoint(req, res, next) {
   }
 }
 
+// display the list of projects
 export async function listProjectsEndpoint(req, res, next) {
   try {
     const projects = await listProjects(req.user.sub)
@@ -21,6 +23,7 @@ export async function listProjectsEndpoint(req, res, next) {
   }
 }
 
+// get a singular project by id
 export async function getProjectEndpoint(req, res, next) {
   try {
     const project = await getProject(req.user.sub, req.params.id)
@@ -33,6 +36,7 @@ export async function getProjectEndpoint(req, res, next) {
   }
 }
 
+// delete a project by id
 export async function deleteProjectEndpoint(req, res, next) {
   try {
     await deleteProject(req.user.sub, req.params.id)
