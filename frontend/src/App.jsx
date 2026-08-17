@@ -83,7 +83,9 @@ export default function App() {
 
   // If the app is opened from an emailed link, route straight to the matching
   // view with the emailed token. Verification links are `${APP_URL}/verify?token=...`,
-  // password-reset links are `${APP_URL}/reset?token=...`.
+  // password-reset links are `${APP_URL}/reset?token=...`. The token is removed
+  // from the address bar immediately so it doesn't linger in the URL or browser
+  // history after the page has captured it.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
@@ -96,6 +98,11 @@ export default function App() {
         setResetToken(token)
         setView('reset')
       }
+
+      // Strip the token from the URL now that it's held in memory.
+      params.delete('token')
+      const search = params.toString()
+      window.history.replaceState(null, '', `${pathname}${search ? `?${search}` : ''}`)
     }
   }, [])
 
