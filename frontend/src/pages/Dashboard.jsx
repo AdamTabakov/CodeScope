@@ -100,7 +100,7 @@ export default function Dashboard({ user, onSignOut, openLegal, navigate, token,
 
       {/* Saved projects */}
       <div className="fade-in-up fade-in-up--3">
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--subtle)', marginBottom: '1rem', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--subtle)', marginBottom: '1rem', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>
           Saved projects
         </h2>
         {projectsLoading ? (

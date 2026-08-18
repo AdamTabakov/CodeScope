@@ -7,10 +7,8 @@ export function getTheme() {
   } catch {
     /* storage unavailable */
   }
-  // Fall back to the OS preference, defaulting to dark.
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
-    ? 'light'
-    : 'dark'
+  // Dark is the default option per the design system.
+  return 'dark'
 }
 
 export function applyTheme(theme) {
