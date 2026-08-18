@@ -608,6 +608,14 @@ a:hover {
   opacity: 0.7;
 }
 
+/* The GeminiEffect wrapper (a plain relative div) collapses to 0 height because
+   its only child, the <svg>, is absolutely positioned. Force it to fill the
+   hero so the line art actually has space to render. */
+.hero-bg > div {
+  position: absolute;
+  inset: 0;
+}
+
 /* Keeps hero content above the background art. */
 .hero-inner {
   position: relative;

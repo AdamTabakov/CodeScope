@@ -77,40 +77,14 @@ export default function CardFlip({
         >
           <div className="relative h-full overflow-hidden bg-gradient-to-b from-[var(--surface)] to-[var(--bg)]">
             {Icon ? (
-              <div className="absolute left-1/2 top-10 -translate-x-1/2">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)]">
-                  <Icon
-                    aria-hidden="true"
-                    className="h-6 w-6 text-[var(--cyan)]"
-                    strokeWidth={1.5}
-                  />
-                </div>
+              <div className="absolute inset-0 flex items-center justify-center pb-16">
+                <Icon
+                  aria-hidden="true"
+                  className="h-32 w-32 text-[var(--cyan)] opacity-[0.22]"
+                  strokeWidth={1.25}
+                />
               </div>
             ) : null}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 flex items-start justify-center pt-24"
-            >
-              <div className="relative flex h-[100px] w-[200px] items-center justify-center">
-                {[...Array(10)].map((_, i) => (
-                  <div
-                    className={cn(
-                      "absolute h-[50px] w-[50px]",
-                      "rounded-[140px]",
-                      "animate-[scale_3s_linear_infinite]",
-                      "motion-reduce:animate-none",
-                      "opacity-0",
-                      "shadow-[0_0_40px_rgba(138,128,112,0.28)]",
-                      "group-hover:animate-[scale_2s_linear_infinite]"
-                    )}
-                    key={i}
-                    style={{
-                      animationDelay: `${i * 0.3}s`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="absolute right-0 bottom-0 left-0 p-5">
@@ -217,26 +191,6 @@ export default function CardFlip({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-                @keyframes scale {
-                    0% {
-                        transform: scale(2);
-                        opacity: 0;
-                        box-shadow: 0px 0px 50px rgba(138, 128, 112, 0.35);
-                    }
-                    50% {
-                        transform: translate(0px, -5px) scale(1);
-                        opacity: 1;
-                        box-shadow: 0px 8px 20px rgba(138, 128, 112, 0.35);
-                    }
-                    100% {
-                        transform: translate(0px, 5px) scale(0.1);
-                        opacity: 0;
-                        box-shadow: 0px 10px 20px rgba(138, 128, 112, 0);
-                    }
-                }
-            `}</style>
     </div>
   );
 }
