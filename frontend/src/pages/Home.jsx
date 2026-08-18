@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import CardFlip from '../components/kokonutui/card-flip'
+import { CardContainer, CardBody, CardItem } from '../components/ui/3d-card'
 
 // ── Code snippets ──────────────────────────────────────────────────────────────
 // Each line is an array of { t: text, c: CSS-class } tokens.
@@ -300,14 +302,41 @@ const FEATURES = [
   {
     title: 'Smart Analysis',
     desc: 'Traces behavior across the entire codebase. Not just the file you paste.',
+    subtitle: 'The whole repo, not just one file.',
+    description:
+      'CodeScope walks the entire repository and explains what the code actually does — how modules connect, what each file is responsible for, and where the important logic lives.',
+    features: [
+      'Full repository tracing',
+      'Plain-English explanations',
+      'File & folder overview',
+      'Architecture summary',
+    ],
   },
   {
     title: 'Issue Detection',
     desc: 'Surfaces injection risks, missing guards, unverified tokens, and logic gaps.',
+    subtitle: 'Real risks a reviewer would spot.',
+    description:
+      'Flags unvalidated input, missing authorization checks, unverified tokens, and logic paths that can silently fail — before they bite in production.',
+    features: [
+      'Injection & input risks',
+      'Missing authorization guards',
+      'Unverified token usage',
+      'Silent-failure logic gaps',
+    ],
   },
   {
     title: 'Instant Scores',
     desc: 'Complexity scores with the exact functions and loops that drive them up.',
+    subtitle: 'Know exactly what is complex and why.',
+    description:
+      'Every repository gets an instant complexity score, broken down to the exact functions and loops pushing it up. No rulebook setup required.',
+    features: [
+      'Instant complexity score',
+      'Per-function breakdown',
+      'Loop & branch drivers',
+      'Zero configuration',
+    ],
   },
 ]
 
@@ -402,55 +431,66 @@ export default function Home({ navigate, openLegal }) {
         </div>
 
         {/* ── Code Slideshow ───────────────────────────────────────── */}
-        <div className="code-terminal">
-          <div className="terminal-chrome">
-            <span className="terminal-dot terminal-dot--red" />
-            <span className="terminal-dot terminal-dot--yellow" />
-            <span className="terminal-dot terminal-dot--green" />
-            <span className="terminal-title">{snippet.file}</span>
-            <span className="terminal-lang-badge">{snippet.lang}</span>
-          </div>
+        <CardContainer containerClassName="w-full py-0">
+          <CardBody className="h-auto w-full max-w-[680px]">
+            <CardItem translateZ="60" className="w-full">
+              <div className="code-terminal">
+                <div className="terminal-chrome">
+                  <span className="terminal-dot terminal-dot--red" />
+                  <span className="terminal-dot terminal-dot--yellow" />
+                  <span className="terminal-dot terminal-dot--green" />
+                  <span className="terminal-title">{snippet.file}</span>
+                  <span className="terminal-lang-badge">{snippet.lang}</span>
+                </div>
 
-          <div className="terminal-body">
-            <div className={snippetClass}>
-              {snippet.lines.map((tokens, i) => (
-                <CodeLine key={i} tokens={tokens} lineNum={i + 1} lineIdx={i} />
-              ))}
-            </div>
-          </div>
+                <div className="terminal-body">
+                  <div className={snippetClass}>
+                    {snippet.lines.map((tokens, i) => (
+                      <CodeLine key={i} tokens={tokens} lineNum={i + 1} lineIdx={i} />
+                    ))}
+                  </div>
+                </div>
 
-          {/* Thin progress bar — drains over INTERVAL_MS, resets on each swap */}
-          <div className="terminal-progress">
-            <div
-              key={progressKey}
-              className="terminal-progress__fill"
-              style={{ '--progress-duration': `${INTERVAL_MS}ms` }}
-            />
-          </div>
+                {/* Thin progress bar — drains over INTERVAL_MS, resets on each swap */}
+                <div className="terminal-progress">
+                  <div
+                    key={progressKey}
+                    className="terminal-progress__fill"
+                    style={{ '--progress-duration': `${INTERVAL_MS}ms` }}
+                  />
+                </div>
 
-          <div className="slideshow-dots" role="tablist" aria-label="Code snippet selector">
-            {SNIPPETS.map((s, i) => (
-              <button
-                key={s.id}
-                role="tab"
-                aria-selected={i === activeIdx}
-                aria-label={`Snippet ${i + 1}: ${s.file}`}
-                className={`slideshow-dot ${i === activeIdx ? 'slideshow-dot--active' : ''}`}
-                onClick={() => handleDotClick(i)}
-              />
-            ))}
-          </div>
-        </div>
+                <div className="slideshow-dots" role="tablist" aria-label="Code snippet selector">
+                  {SNIPPETS.map((s, i) => (
+                    <button
+                      key={s.id}
+                      role="tab"
+                      aria-selected={i === activeIdx}
+                      aria-label={`Snippet ${i + 1}: ${s.file}`}
+                      className={`slideshow-dot ${i === activeIdx ? 'slideshow-dot--active' : ''}`}
+                      onClick={() => handleDotClick(i)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </CardItem>
+          </CardBody>
+        </CardContainer>
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────── */}
       <section className="features">
         <div className="features-grid">
-          {FEATURES.map(({ title, desc }) => (
-            <article className="feature-card" key={title}>
-              <h3 className="feature-title">{title}</h3>
-              <p className="feature-desc">{desc}</p>
-            </article>
+          {FEATURES.map((feature) => (
+            <CardFlip
+              key={feature.title}
+              title={feature.title}
+              subtitle={feature.subtitle}
+              description={feature.description}
+              features={feature.features}
+              actionLabel="Try it free"
+              onAction={() => navigate('signup')}
+            />
           ))}
         </div>
       </section>

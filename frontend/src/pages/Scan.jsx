@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { streamChat, saveProject, getProject } from '../services/api.js'
+import AIInputSearch from '../components/kokonutui/ai-input-search'
+import FileUpload from '../components/kokonutui/file-upload'
+import Loader from '../components/kokonutui/loader'
+import AILoadingState from '../components/kokonutui/ai-loading'
 
 // ── Inline icons (no icon library) ───────────────────────────────────────────
 const iconProps = {
@@ -24,7 +28,6 @@ const IconAlert = ({ size = 13 }) => <svg {...iconProps} width={size} height={si
 const IconWarning = ({ size = 12 }) => <svg {...iconProps} width={size} height={size}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
 const IconLink = ({ size = 12 }) => <svg {...iconProps} width={size} height={size}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
 const IconChat = ({ size = 16 }) => <svg {...iconProps} width={size} height={size}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-const IconSend = ({ size = 14 }) => <svg {...iconProps} width={size} height={size}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
 const IconClose = ({ size = 14 }) => <svg {...iconProps} width={size} height={size}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
 const IconSpinner = ({ size = 14 }) => (
   <svg className="spin" {...iconProps} width={size} height={size}>
@@ -103,6 +106,14 @@ async function uploadRepository(url, token) {
   if (!response.ok) throw new Error(data.error || 'Could not load that repository.')
   return data
 }
+
+// CodeScope accepts GitHub repositories only — any local file that gets
+// dropped into the upload widget is rejected and the user is pointed back to
+// the repository URL box.
+const githubOnlyFileError = (file) => ({
+  message: 'CodeScope accepts GitHub repositories only. Paste the repo URL above instead of uploading files.',
+  code: 'GITHUB_ONLY',
+})
 
 function buildTree(paths) {
   const root = { type: 'folder', name: 'repo', path: 'repo', children: [] }
@@ -392,7 +403,6 @@ export default function Scan({ navigate, user, token, initialUrl = '', initialPr
   // Chat state
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState([])   // { id, role, content, file }
-  const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
 
   // Saved project state
@@ -763,7 +773,6 @@ const buildChatContext = (override = {}) => {
     const assistantMsg = { id: assistantId, role: 'assistant', content: '', file: selectedPath }
     const pending = [...messages, userMsg, assistantMsg]
     setMessages(pending)
-    setChatInput('')
     setChatLoading(true)
 
     const applyFinal = (reply) => {
@@ -784,13 +793,6 @@ const buildChatContext = (override = {}) => {
       applyFinal("I couldn't connect to the analysis service. Make sure you're logged in and the backend is running.")
     } finally {
       setChatLoading(false)
-    }
-  }
-
-  const handleChatKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault()
-      sendMessage(chatInput)
     }
   }
 
@@ -972,6 +974,13 @@ const buildChatContext = (override = {}) => {
                   <span className="scan-code__text">{line || ' '}</span>
                 </span>
               ))
+) : status.state === 'loading' ? (
+              <div className="scan-empty-upload">
+                <Loader
+                  title="Analyzing repository…"
+                  subtitle="Fetching files and preparing your overview"
+                />
+              </div>
             ) : !tree ? (
               <div className="scan-empty-upload">
                 <IconBranch size={34} />
@@ -999,6 +1008,10 @@ const buildChatContext = (override = {}) => {
                       : 'Scan repo'}
                   </button>
                 </form>
+                <FileUpload
+                  validateFile={githubOnlyFileError}
+                  acceptedFileTypes={[]}
+                />
               </div>
             ) : (
               <span className="scan-code-placeholder">Select a file from the tree to view its source.</span>
@@ -1057,11 +1070,11 @@ const buildChatContext = (override = {}) => {
                 )
               })}
 
-              {chatLoading && (
-                <div className="chat-thinking">
-                  <span /><span /><span />
-                </div>
-              )}
+              {chatLoading && (() => {
+                const lastMsg = messages[messages.length - 1]
+                const streamingStarted = lastMsg?.role === 'assistant' && !!lastMsg.content
+                return streamingStarted ? null : <AILoadingState />
+              })()}
 
               {/* Scroll anchor */}
               <div ref={messagesEndRef} />
@@ -1084,27 +1097,15 @@ const buildChatContext = (override = {}) => {
             )}
 
             <div className="scan-chat__input-area">
-              <textarea
-                className="scan-chat__textarea"
-                rows={1}
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={handleChatKeyDown}
+              <AIInputSearch
                 placeholder={token ? 'Ask about the code…' : 'Sign in to use the assistant'}
+                searchLabel="Ask"
+                onSubmit={(value) => sendMessage(value)}
                 disabled={!token || chatLoading}
+                className="py-2"
               />
-              <button
-                type="button"
-                className="scan-chat__send"
-                onClick={() => sendMessage(chatInput)}
-                disabled={!token || chatLoading || !chatInput.trim()}
-                title={!token ? 'Sign in to use the assistant' : 'Send (Ctrl+Enter)'}
-                aria-label="Send message"
-              >
-                <IconSend />
-              </button>
             </div>
-            <div className="scan-chat__hint">Ctrl+Enter to send</div>
+            <div className="scan-chat__hint">Enter to send</div>
           </aside>
         )}
       </div>

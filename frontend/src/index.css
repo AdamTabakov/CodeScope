@@ -1,3 +1,18 @@
+/* ─── Tailwind (utilities only, no preflight) ───────────────────────────────── */
+/* The shadcn/kokonutui components use Tailwind utility classes. Preflight is
+   intentionally skipped so existing styles are never reset. Only utilities that
+   are actually used get compiled. */
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+/* The components rely on `dark:` variants. Map them to the project's manual
+   theme toggle ([data-theme]) instead of the default prefers-color-scheme. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ─── CSS Custom Properties ─────────────────────────────────────────────────── */
 /* Hyperstudio — dark theme is the default. A light theme is layered in via
    [data-theme]. See DESIGNS.md for the token reference. */
@@ -43,6 +58,18 @@
   --page-max-width: 1200px;
 
   --transition: 150ms ease;
+
+  /* Tailwind/shadcn component tokens — aliased to the project palette so the
+     generated components (border-input, text-muted-foreground, ring-ring, …)
+     resolve to real colors in both themes. */
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-foreground: var(--text);
+  --color-background: var(--bg);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted);
+  --color-destructive: var(--red);
 }
 
 :root[data-theme='light'] {
@@ -68,6 +95,15 @@
   --text: #1a1a1a;
   --muted: #6e6e6e;
   --subtle: #484848;
+
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-foreground: var(--text);
+  --color-background: var(--bg);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted);
+  --color-destructive: var(--red);
 }
 
 /* ─── Reset ─────────────────────────────────────────────────────────────────── */
@@ -717,6 +753,7 @@ a:hover {
   grid-template-columns: repeat(2, 1fr);
   column-gap: 3rem;
   row-gap: 2rem;
+  place-items: center;
 }
 
 @media (max-width: 768px) {
@@ -2149,30 +2186,7 @@ a:hover {
   word-break: break-all;
 }
 
-/* Thinking dots */
-@keyframes chatDot {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
-  40% { transform: scale(1); opacity: 1; }
-}
-.chat-thinking {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0.625rem 0.875rem;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  border-bottom-left-radius: 4px;
-  align-self: flex-start;
-}
-.chat-thinking span {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--muted);
-  animation: chatDot 1.2s infinite ease-in-out;
-}
-.chat-thinking span:nth-child(2) { animation-delay: 0.2s; }
-.chat-thinking span:nth-child(3) { animation-delay: 0.4s; }
+/* Thinking state is rendered by the kokonutui ai-loading component */
 
 /* Quick action chips */
 .chat-chips {
@@ -2201,7 +2215,7 @@ a:hover {
   cursor: not-allowed;
 }
 
-/* Input area */
+/* Input area — rendered by the kokonutui ai-input-search component */
 .scan-chat__input-area {
   border-top: 1px solid var(--border);
   padding: 0.625rem 0.75rem;
@@ -2210,40 +2224,6 @@ a:hover {
   align-items: flex-end;
   flex-shrink: 0;
 }
-
-.scan-chat__textarea {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  resize: none;
-  outline: none;
-  min-height: 36px;
-  max-height: 120px;
-  overflow-y: auto;
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-.scan-chat__textarea::placeholder { color: var(--muted); }
-.scan-chat__textarea:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-
-.scan-chat__send {
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--primary);
-  border: none; border-radius: var(--radius-pill);
-  color: var(--text-on-primary); cursor: pointer;
-  flex-shrink: 0;
-}
-.scan-chat__send:hover:not(:disabled) { background: var(--primary-hover); }
-.scan-chat__send:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .scan-chat__hint {
   font-size: 0.68rem;
