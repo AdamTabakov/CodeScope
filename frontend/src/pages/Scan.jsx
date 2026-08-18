@@ -402,6 +402,7 @@ export default function Scan({ navigate, user, token, initialUrl = '', initialPr
     const saved = Number(window.localStorage.getItem('codescope:chatWidth'))
     return Number.isFinite(saved) && saved >= 320 && saved <= 1000 ? saved : 520
   })
+  const [mobileTreeOpen, setMobileTreeOpen] = useState(false)
 
   const messagesEndRef = useRef(null)
   const pasteTimeoutRef = useRef(null)
@@ -821,6 +822,18 @@ const buildChatContext = (override = {}) => {
           Dashboard
         </button>
 
+        <button
+          type="button"
+          className={`scan-files-btn${mobileTreeOpen ? ' scan-files-btn--active' : ''}`}
+          onClick={() => setMobileTreeOpen((o) => !o)}
+          aria-expanded={mobileTreeOpen}
+          aria-controls="scan-file-tree"
+          aria-label="Toggle file explorer"
+        >
+          <IconFolder />
+          Files
+        </button>
+
         <form className="scan-url-form" onSubmit={handleSubmit}>
           <div className="scan-url-wrap">
             <IconBranch size={14} className="scan-url-icon" />
@@ -902,9 +915,20 @@ const buildChatContext = (override = {}) => {
         </div>
       )}
 
-      <div className="scan-workspace">
+<div className="scan-workspace">
         {/* File tree */}
-        <aside className="scan-tree" aria-label="File explorer">
+        {mobileTreeOpen && (
+          <div
+            className="scan-tree__backdrop"
+            onClick={() => setMobileTreeOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        <aside
+          id="scan-file-tree"
+          className={`scan-tree${mobileTreeOpen ? ' scan-tree--open' : ''}`}
+          aria-label="File explorer"
+        >
           {tree ? (
             rootNodes.map((node) => (
               <TreeNode
@@ -913,7 +937,10 @@ const buildChatContext = (override = {}) => {
                 depth={0}
                 selected={selectedPath}
                 expanded={expanded}
-                onSelect={setSelectedPath}
+                onSelect={(path) => {
+                  setSelectedPath(path)
+                  setMobileTreeOpen(false)
+                }}
                 onToggle={toggleFolder}
               />
             ))

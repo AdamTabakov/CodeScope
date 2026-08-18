@@ -621,6 +621,11 @@ a:hover {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 0.75rem;
 }
 
 .terminal-body {
@@ -630,7 +635,15 @@ a:hover {
   line-height: 1.8;
   /* Stable height prevents layout shift during the exit phase */
   min-height: 330px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@media (max-width: 600px) {
+  .terminal-body {
+    font-size: 0.75rem;
+    padding: 1rem;
+  }
 }
 
 .t-comment  { color: var(--muted); }
@@ -1470,7 +1483,8 @@ a:hover {
 
 .error-terminal__line {
   display: block;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* Action buttons row */
@@ -1534,6 +1548,8 @@ a:hover {
   display: flex;
   gap: 0;
   flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .legal-tab {
@@ -2270,4 +2286,219 @@ a:hover {
   .cookie-banner { flex-wrap: wrap; }
   .cookie-banner__actions { width: 100%; }
   .cookie-banner__actions .btn { flex: 1; justify-content: center; }
+}
+
+/* ─── Mobile responsiveness ─────────────────────────────────────────────────── */
+
+/* Use dynamic viewport height so the scan page fills mobile browser chrome */
+.scan-page {
+  height: calc(100vh - 64px);
+}
+@supports (height: 100dvh) {
+  .scan-page {
+    height: calc(100dvh - 64px);
+  }
+}
+
+/* Navbar hamburger + dropdown */
+@keyframes menuDrop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navbar__menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar__menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--subtle);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .navbar__menu-btn:hover,
+  .navbar__menu-btn--open {
+    color: var(--text);
+    border-color: var(--muted);
+  }
+
+  .navbar__nav,
+  .navbar__user--desktop {
+    display: none;
+  }
+
+  .navbar__menu {
+    display: block;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    padding: 0.75rem 1rem 1rem;
+    animation: menuDrop 0.18s ease both;
+  }
+
+  .navbar__menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .navbar__menu-user {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--subtle);
+    padding: 0.25rem 0.5rem 0.5rem;
+  }
+
+  .navbar__menu .navbar__nav-link {
+    width: 100%;
+    text-align: left;
+    padding: 0.7rem 0.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .navbar__menu-legal {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* Scan page: file-tree becomes a slide-in drawer on phones */
+.scan-files-btn {
+  display: none;
+}
+
+.scan-tree__backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .scan-files-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 34px;
+    padding: 0 0.75rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .scan-files-btn:hover,
+  .scan-files-btn--active {
+    color: var(--primary-hover);
+    border-color: rgba(110, 125, 150, 0.4);
+    background: rgba(110, 125, 150, 0.07);
+  }
+
+  .scan-tree {
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 82vw);
+    z-index: 60;
+    background: var(--surface);
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    box-shadow: none;
+  }
+  .scan-tree--open {
+    transform: translateX(0);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .scan-tree__backdrop {
+    display: block;
+    position: fixed;
+    top: 64px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 55;
+    background: rgba(4, 4, 12, 0.55);
+  }
+}
+
+/* Chat panel spans the full width on phones */
+@media (max-width: 900px) {
+  .scan-chat {
+    width: 100vw !important;
+  }
+  .scan-chat__resizer {
+    display: none;
+  }
+}
+
+/* Hero + terminal on very small screens */
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero {
+    padding: 6.5rem 1rem 3.5rem;
+  }
+  .terminal-body {
+    min-height: 260px;
+  }
+}
+
+/* Prevent iOS auto-zoom when focusing inputs */
+@media (max-width: 600px) {
+  .form-input,
+  .scan-url-input,
+  .scan-empty-upload__form input,
+  .scan-chat__textarea {
+    font-size: 16px;
+  }
+}
+
+/* Reasonable touch-target heights on phones */
+@media (max-width: 600px) {
+  .btn {
+    min-height: 44px;
+  }
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+  .auth-card {
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+/* Shrink legal modal chrome on phones */
+@media (max-width: 600px) {
+  .legal-modal__scroll {
+    padding: 1.5rem 1.25rem 2rem;
+  }
+  .legal-tab {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+  .legal-modal__header {
+    padding: 0.25rem 0.5rem 0 0.75rem;
+  }
 }
