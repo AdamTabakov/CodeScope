@@ -17,7 +17,7 @@ export const config = {
   jwtSecret,
   jwtIssuer: process.env.JWT_ISSUER || 'codescope',
   jwtAudience: process.env.JWT_AUDIENCE || 'codescope-web',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   adminUsername: process.env.ADMIN_USERNAME || 'Adam',
   adminPassword: process.env.ADMIN_PASSWORD, // no fallback — must come from .env
   adminEmail: process.env.ADMIN_EMAIL || 'adam@codescope.local',

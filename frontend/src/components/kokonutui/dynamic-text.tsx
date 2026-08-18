@@ -27,7 +27,7 @@ const greetings: Greeting[] = [
   { text: "안녕하세요", language: "Korean" },
   { text: "Ciao", language: "Italian" },
   { text: "Hallo", language: "German" },
-  { text: "こんにちは", language: "Japanese" },
+  { text: "Hello", language: "English" },
 ];
 
 const DynamicText = ({ className }: { className?: string }) => {

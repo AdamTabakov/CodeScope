@@ -23,6 +23,43 @@ const AUTH_REQUIRED = new Set(['dashboard', 'scan'])
 // All known views
 const KNOWN_VIEWS = new Set(['home', 'login', 'signup', 'dashboard', 'scan', 'error', 'forgot', 'reset', 'verify'])
 
+// Browser-side session persistence so a refresh (or a later visit) keeps the
+// user signed in for as long as their token is valid.
+const SESSION_KEY = 'codescope:session'
+
+// Decode a JWT payload without verifying it. Only used client-side to check
+// whether a restored session has already expired; the server re-verifies the
+// signature on every API call.
+function decodeJwtPayload(token) {
+  try {
+    const part = String(token).split('.')[1]
+    if (!part) return null
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=')
+    return JSON.parse(atob(padded))
+  } catch {
+    return null
+  }
+}
+
+// Restore a previously saved session, discarding it if the token has expired.
+function restoreSession() {
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY)
+    if (!raw) return { token: null, user: null }
+    const { token, user } = JSON.parse(raw)
+    if (!token || !user) return { token: null, user: null }
+    const payload = decodeJwtPayload(token)
+    if (!payload || typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now()) {
+      window.localStorage.removeItem(SESSION_KEY)
+      return { token: null, user: null }
+    }
+    return { token, user }
+  } catch {
+    return { token: null, user: null }
+  }
+}
+
 // Short human labels used when composing error-page <title>s.
 const ERROR_LABELS = {
   404: 'Page not found',
@@ -55,7 +92,7 @@ const pathFor = (target) => {
 // Export App
 export default function App() {
   const [view, setView] = useState('home')
-  const [auth, setAuth] = useState({ token: null, user: null })
+  const [auth, setAuth] = useState(restoreSession)
   const [legalPage, setLegalPage] = useState(null)
   const [errorState, setErrorState] = useState({ type: 404, message: '' })
   const [scanUrl, setScanUrl] = useState('')
@@ -114,6 +151,12 @@ export default function App() {
     } else {
       const key = pathname.replace(/^\//, '').split('/')[0]
       if (KNOWN_VIEWS.has(key)) initialView = key
+    }
+
+    // A signed-in user refreshing on the marketing page should land on their
+    // dashboard instead. `auth` here is the session restored on first render.
+    if (initialView === 'home' && auth.user) {
+      initialView = 'dashboard'
     }
 
     params.delete('token')
@@ -196,6 +239,12 @@ export default function App() {
 
   // Handle successful authentication
   const handleAuthSuccess = ({ token, user }) => {
+    try {
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify({ token, user }))
+    } catch {
+      // Storage may be unavailable (private mode, quota); the session still
+      // works in memory for the current page.
+    }
     setAuth({ token, user })
     setView('dashboard')
     window.history.pushState({ view: 'dashboard' }, '', pathFor('dashboard'))
@@ -203,6 +252,11 @@ export default function App() {
 
   // Handle sign out
   const handleSignOut = () => {
+    try {
+      window.localStorage.removeItem(SESSION_KEY)
+    } catch {
+      // Nothing to clean up if storage is unavailable.
+    }
     setAuth({ token: null, user: null })
     setView('home')
     window.history.pushState({ view: 'home' }, '', pathFor('home'))

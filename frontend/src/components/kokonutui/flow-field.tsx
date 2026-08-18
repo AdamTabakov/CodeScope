@@ -153,14 +153,15 @@ export default function FlowField({
     if (!ctx) return;
 
     const cfg = THEMES[theme];
-    const count = PARTICLE_COUNTS[density];
-    const dpr = window.devicePixelRatio ?? 1;
+    // Cap device pixel ratio so 3x phones don't render a 3x-sized canvas.
+    const dpr = Math.min(window.devicePixelRatio ?? 1, 2);
 
     let width = 0;
     let height = 0;
     let animId = 0;
     let time = 0;
     let particles: Particle[] = [];
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const spawnParticle = (): Particle => {
       const maxLife = 200 + Math.floor(Math.random() * 300);
@@ -187,11 +188,19 @@ export default function FlowField({
       ctx.fillStyle = `rgb(${cfg.bg})`;
       ctx.fillRect(0, 0, width, height);
 
+      // Scale particle count to the viewport so phones don't pay the full
+      // desktop cost of the same density level.
+      const areaScale = Math.min(1, (width * height) / (1920 * 1080));
+      const scaledCount = Math.max(150, Math.round(PARTICLE_COUNTS[density] * areaScale));
+
       // Re-seed particles spread across the canvas
-      particles = Array.from({ length: count }, spawnParticle);
+      particles = Array.from({ length: scaledCount }, spawnParticle);
+
+      // Reduced motion: repaint one static frame so the canvas isn't blank.
+      if (reduceMotion) draw();
     };
 
-    const render = () => {
+    const draw = () => {
       time++;
 
       // Fade previous frame — each dot persists ~16 frames, creating soft trails
@@ -234,13 +243,21 @@ export default function FlowField({
         ctx.fillStyle = `hsla(${hueMod}, ${cfg.saturation}%, ${cfg.lightness}%, ${alpha})`;
         ctx.fill();
       }
+    };
 
+    const render = () => {
+      draw();
       animId = requestAnimationFrame(render);
     };
 
     resize();
     window.addEventListener("resize", resize);
-    render();
+    if (reduceMotion) {
+      // Respect the OS preference: paint a single static frame, no loop.
+      draw();
+    } else {
+      render();
+    }
 
     return () => {
       cancelAnimationFrame(animId);

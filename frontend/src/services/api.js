@@ -1,17 +1,49 @@
 // Strip any trailing slashes from the configured API URL so a value like
 const BASE = `${String(import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')}/api`
 
+// How long the app waits for a server reply before giving up with a clear
+// error. Without a timeout a hung connection (cold database, sleeping host,
+// network hiccup) leaves the UI spinning "forever".
+const REQUEST_TIMEOUT_MS = 15000
+const CHAT_CONNECT_TIMEOUT_MS = 20000
+
+class ApiTimeoutError extends Error {
+  constructor() {
+    super('The server is taking too long to respond. Please try again.')
+    this.name = 'ApiTimeoutError'
+  }
+}
+
+// fetch() with an AbortController deadline. Throws ApiTimeoutError on timeout.
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } catch (error) {
+    if (error.name === 'AbortError') throw new ApiTimeoutError()
+    throw error
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function request(path, body) {
   let response
 
-  // Network failure (backend down, DNS error, etc.)
+  // Network failure (backend down, DNS error, etc.) or timeout
   try {
-    response = await fetch(`${BASE}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-  } catch {
+    response = await fetchWithTimeout(
+      `${BASE}${path}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+      REQUEST_TIMEOUT_MS,
+    )
+  } catch (error) {
+    if (error instanceof ApiTimeoutError) throw error
     throw new Error('Could not reach the server. Make sure the backend is running.')
   }
 
@@ -40,15 +72,20 @@ async function request(path, body) {
 async function apiFetch(path, { method = 'GET', body, token } = {}) {
   let response
   try {
-    response = await fetch(`${BASE}${path}`, {
-      method,
-      headers: {
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    response = await fetchWithTimeout(
+      `${BASE}${path}`,
+      {
+        method,
+        headers: {
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
       },
-      body: body ? JSON.stringify(body) : undefined,
-    })
-  } catch {
+      REQUEST_TIMEOUT_MS,
+    )
+  } catch (error) {
+    if (error instanceof ApiTimeoutError) throw error
     throw new Error('Could not reach the server. Make sure the backend is running.')
   }
   // Parse the response body as JSON, if present
@@ -83,8 +120,13 @@ export function signup({ username, email, password, confirmPassword }) {
 export async function verifyEmail(token) {
   let response
   try {
-    response = await fetch(`${BASE}/verify-email?token=${encodeURIComponent(token)}`)
-  } catch {
+    response = await fetchWithTimeout(
+      `${BASE}/verify-email?token=${encodeURIComponent(token)}`,
+      undefined,
+      REQUEST_TIMEOUT_MS,
+    )
+  } catch (error) {
+    if (error instanceof ApiTimeoutError) throw error
     throw new Error('Could not reach the server. Make sure the backend is running.')
   }
 
@@ -135,15 +177,20 @@ export function getProject(id, token) {
 export async function streamChat({ message, context, token, onDelta }) {
   let response
   try {
-    response = await fetch(`${BASE}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    response = await fetchWithTimeout(
+      `${BASE}/chat`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message, context }),
       },
-      body: JSON.stringify({ message, context }),
-    })
-  } catch {
+      CHAT_CONNECT_TIMEOUT_MS,
+    )
+  } catch (error) {
+    if (error instanceof ApiTimeoutError) throw error
     throw new Error('Could not reach the server. Make sure the backend is running.')
   }
 

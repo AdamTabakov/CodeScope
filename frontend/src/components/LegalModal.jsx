@@ -33,7 +33,7 @@ const PRIVACY = {
         },
         {
           label: 'e) Browser Storage',
-          text: 'CodeScope uses browser-side storage for certain functionality.\n\nAuthentication state may be maintained in browser memory. Authentication tokens are not intentionally stored in cookies or localStorage.\n\nCodeScope may store recently scanned repository URLs in your browser\'s localStorage so that previously accessed repositories can be displayed in the application\'s recent-scans interface.\n\nThese locally stored repository URLs remain on your device unless removed by you or cleared by your browser.\n\nCodeScope does not intentionally use localStorage to store passwords, authentication tokens, or complete source-code submissions.',
+          text: 'CodeScope uses browser-side storage for certain functionality.\n\nTo keep you signed in across page loads, your authentication token and a minimal account profile (username, email, role) are stored in your browser\'s localStorage. This session data is removed when you sign out and is not used for tracking or advertising.\n\nCodeScope may also store recently scanned repository URLs in your browser\'s localStorage so that previously accessed repositories can be displayed in the application\'s recent-scans interface.\n\nThese locally stored items remain on your device unless removed by you or cleared by your browser.\n\nCodeScope does not intentionally use localStorage to store passwords or complete source-code submissions.',
         },
       ],
     },
@@ -59,11 +59,11 @@ const PRIVACY = {
     },
     {
       heading: '7. Security',
-      body: `We use reasonable technical and organizational measures designed to protect information processed by CodeScope.\n\nThese measures may include:\n\n• Password hashing using bcrypt\n• Short-lived signed authentication tokens\n• HTTPS/TLS encryption for data transmitted between clients and our servers\n• Access controls\n• Least-privilege application permissions\n• Restricted database access\n• Server-side authentication and authorization\n• Security monitoring and abuse prevention\n\nNo Internet-based service can guarantee absolute security.\n\nYou are responsible for maintaining the security of your account credentials and for reviewing information before submitting it to CodeScope.`,
+      body: `We use reasonable technical and organizational measures designed to protect information processed by CodeScope.\n\nThese measures may include:\n\n• Password hashing using bcrypt\n• Signed authentication tokens with expiration\n• HTTPS/TLS encryption for data transmitted between clients and our servers\n• Access controls\n• Least-privilege application permissions\n• Restricted database access\n• Server-side authentication and authorization\n• Security monitoring and abuse prevention\n\nNo Internet-based service can guarantee absolute security.\n\nYou are responsible for maintaining the security of your account credentials and for reviewing information before submitting it to CodeScope.`,
     },
     {
       heading: '8. Authentication',
-      body: `CodeScope uses signed JSON Web Tokens (JWTs) for authentication.\n\nAuthentication tokens are designed to be short-lived and expire after approximately one hour.\n\nAuthentication tokens are maintained in browser memory rather than intentionally being persisted in cookies or localStorage.\n\nYou should sign out when using CodeScope on a shared or publicly accessible device.`,
+      body: `CodeScope uses signed JSON Web Tokens (JWTs) for authentication.\n\nAuthentication tokens are designed to expire after a longer session window (currently up to 30 days). While you are signed in, the token and a minimal account profile are stored in your browser's localStorage so you stay signed in across page loads; both are cleared when you sign out.\n\nYou should sign out when using CodeScope on a shared or publicly accessible device.`,
     },
     {
       heading: '9. Cookies and Tracking',

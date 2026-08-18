@@ -14,7 +14,13 @@ export async function connectDb() {
   }
   // Attempt to connect to MongoDB
   try {
-    await mongoose.connect(config.mongoUri)
+    await mongoose.connect(config.mongoUri, {
+      // Fail fast instead of hanging for the 30s+ driver default when the
+      // database is unreachable or sleeping (e.g. a paused Atlas free tier).
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    })
     connected = true
     console.log('[db] Connected to MongoDB:', config.mongoUri)
     await ensureEmailIndexes()
@@ -33,23 +39,29 @@ export async function connectDb() {
 // like a plain unique index.
 async function ensureEmailIndexes() {
   try {
-    const indexes = await User.collection.indexes()
-    for (const index of indexes) {
-      if (index.key && index.key.email === 1 && index.unique) {
-        await User.collection.dropIndex(index.name)
-        console.warn(`[db] Dropped unique email index "${index.name}" (recreating as allowlist-aware partial index).`)
-      }
-    }
-
     const allowlist = config.duplicateEmailAllowlist
-    const spec = { unique: true, key: { email: 1 } }
+    const spec = { unique: true, key: { email: 1 }, name: 'email_unique' }
     if (allowlist.length > 0) {
       spec.partialFilterExpression =
         allowlist.length === 1
           ? { email: { $ne: allowlist[0] } }
           : { $and: allowlist.map((email) => ({ email: { $ne: email } })) }
     }
+
+    // Build the new index FIRST, then drop the legacy one. Reversing the order
+    // (drop then create) leaves the collection without any unique constraint
+    // if the rebuild fails, which is what caused the earlier duplicate-key
+    // index build error on the production database.
     await User.collection.createIndex({ email: 1 }, spec)
+
+    const indexes = await User.collection.indexes()
+    for (const index of indexes) {
+      if (index.name === 'email_unique') continue
+      if (index.key && index.key.email === 1 && index.unique) {
+        await User.collection.dropIndex(index.name)
+        console.warn(`[db] Replaced legacy unique email index "${index.name}" with "email_unique".`)
+      }
+    }
     if (allowlist.length > 0) {
       console.warn(`[db] Duplicate email registration allowed only for: ${allowlist.join(', ')}`)
     }

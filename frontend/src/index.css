@@ -2515,6 +2515,21 @@ a:hover {
   }
 }
 
+/* Slightly tighter page chrome so nothing runs to the screen edge on phones */
+@media (max-width: 600px) {
+  .navbar { padding: 0 1rem; }
+  .dashboard-page { padding: 5rem 1.25rem 2.5rem; }
+  .features { padding: 3.5rem 1.25rem; }
+}
+
+/* Once the "Files" button appears, let the scan top bar wrap so the URL
+   input keeps a usable width instead of being crushed between controls. */
+@media (max-width: 768px) {
+  .scan-topbar { flex-wrap: wrap; row-gap: 0.5rem; }
+  .scan-url-form { order: 3; width: 100%; }
+  .scan-chat-toggle { margin-left: auto; }
+}
+
 /* Hero + terminal on very small screens */
 @media (max-width: 480px) {
   .hero-title {
