@@ -3,10 +3,18 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
+// Fail closed: a predictable hardcoded secret in production would let anyone
+// forge authentication tokens, so refuse to start instead.
+const isProd = process.env.NODE_ENV === 'production'
+const jwtSecret = process.env.JWT_SECRET || 'dev-only-change-this-secret-before-deploy'
+if (isProd && jwtSecret === 'dev-only-change-this-secret-before-deploy') {
+  throw new Error('JWT_SECRET must be set when NODE_ENV=production.')
+}
+
 // Configuration object for the application
 export const config = {
   port: process.env.PORT || 3000,
-  jwtSecret: process.env.JWT_SECRET || 'dev-only-change-this-secret-before-deploy',
+  jwtSecret,
   jwtIssuer: process.env.JWT_ISSUER || 'codescope',
   jwtAudience: process.env.JWT_AUDIENCE || 'codescope-web',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
@@ -17,6 +25,13 @@ export const config = {
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   appUrl: process.env.APP_URL || 'http://localhost:3000',
+  // Where the browser should land after an OAuth round-trip. Defaults to the
+  // backend origin because production serves the built frontend co-located.
+  frontendUrl: process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000',
+  // Google OAuth credentials. Kept server-side only; never exposed to the client.
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  isProd,
   resendApiKey: process.env.RESEND_API_KEY || '',
   emailFrom: process.env.EMAIL_FROM || 'CodeScope <no-reply@codescope.local>',
   // Comma-separated list of allowed browser origins for CORS. Never use "*" —

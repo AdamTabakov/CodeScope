@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { login } from '../services/api.js'
+import GoogleButton from '../components/GoogleButton.jsx'
 
 const IconBack = () => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -27,6 +28,22 @@ export default function Login({ navigate, onAuthSuccess, openLegal }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Surface a failed Google OAuth round-trip that redirected back here.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const googleError = params.get('googleError')
+    if (googleError) {
+      setError(
+        googleError === '2'
+          ? 'That Google account is not allowed to sign up here.'
+          : 'Google sign-in did not complete. Please try again.',
+      )
+      params.delete('googleError')
+      const search = params.toString()
+      window.history.replaceState({}, '', `/login${search ? `?${search}` : ''}`)
+    }
+  }, [])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -67,6 +84,9 @@ export default function Login({ navigate, onAuthSuccess, openLegal }) {
 
         <h1 className="auth-heading">Welcome back</h1>
         <p className="auth-sub">Sign in to view your scans and connected repositories.</p>
+
+        <GoogleButton disabled={loading} />
+        <div className="oauth-divider">or sign in with email</div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">

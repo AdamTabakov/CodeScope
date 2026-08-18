@@ -1,3 +1,5 @@
+import { isDisposableEmail } from './disposableEmails.js'
+
 export function parseLoginBody(body) {
   if (!isPlainObject(body)) {
     return { ok: false, error: 'Invalid login payload.' }
@@ -62,6 +64,10 @@ export function parseSignupBody(body) {
   const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
   if (!isValidEmail(trimmedEmail)) {
     return { ok: false, field: 'email', error: 'Enter a valid email address.' }
+  }
+
+  if (isDisposableEmail(trimmedEmail)) {
+    return { ok: false, field: 'email', error: 'Please use a permanent email address, not a temporary one.' }
   }
 
   if (!isSafePassword(password)) {

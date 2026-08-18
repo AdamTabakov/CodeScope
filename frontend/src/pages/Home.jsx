@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { useScroll, useSpring, useTransform } from 'motion/react'
 import CardFlip from '../components/kokonutui/card-flip'
 import { CardContainer, CardBody, CardItem } from '../components/ui/3d-card'
+import { GoogleGeminiEffect } from '../components/ui/google-gemini-effect'
 
 // ── Code snippets ──────────────────────────────────────────────────────────────
 // Each line is an array of { t: text, c: CSS-class } tokens.
@@ -362,12 +364,24 @@ const INTERVAL_MS = 6000
 const EXIT_MS = 190   // how long the exit animation plays before content swaps
 
 export default function Home({ navigate, openLegal }) {
+  const heroRef = useRef(null)
   const [activeIdx, setActiveIdx] = useState(0)
   const [phase, setPhase] = useState('enter')  // 'enter' | 'exit'
   const [progressKey, setProgressKey] = useState(0)
   const activeIdxRef = useRef(0)
   const exitTimerRef = useRef(null)
   const intervalRef = useRef(null)
+
+  // As the hero scrolls past, the background line art draws itself in.
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end end'] })
+  const spring = useSpring(scrollYProgress, { stiffness: 60, damping: 20, restDelta: 0.001 })
+  const pathLengths = [
+    useTransform(spring, [0, 0.6], [0, 1]),
+    useTransform(spring, [0.1, 0.7], [0, 1]),
+    useTransform(spring, [0.2, 0.8], [0, 1]),
+    useTransform(spring, [0.3, 0.9], [0, 1]),
+    useTransform(spring, [0.4, 1], [0, 1]),
+  ]
 
   // Two-phase transition: exit old → swap content → enter new
   const switchTo = (newIdx) => {
@@ -406,7 +420,12 @@ export default function Home({ navigate, openLegal }) {
   return (
     <div className="home-page">
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="hero">
+      <section className="hero" ref={heroRef}>
+        <div className="hero-bg" aria-hidden="true">
+          <GoogleGeminiEffect pathLengths={pathLengths} />
+        </div>
+
+        <div className="hero-inner">
         <div className="hero-badge">
           AI-powered code diagnostics
         </div>
@@ -476,6 +495,7 @@ export default function Home({ navigate, openLegal }) {
             </CardItem>
           </CardBody>
         </CardContainer>
+        </div>
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────── */}

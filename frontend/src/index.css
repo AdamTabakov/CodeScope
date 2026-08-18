@@ -533,6 +533,57 @@ a:hover {
   margin-bottom: 1.75rem;
 }
 
+/* ─── OAuth ─────────────────────────────────────────────────────────────────── */
+.oauth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.7rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  box-sizing: border-box;
+}
+
+.oauth-button:hover:not(.oauth-button--disabled) {
+  border-color: var(--border-focus);
+  background: var(--card);
+}
+
+.oauth-button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 1.25rem 0;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -597,6 +648,25 @@ a:hover {
   overflow: hidden;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+}
+
+/* Scroll-drawn line art behind the hero content. */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Keeps hero content above the background art. */
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .hero-badge {

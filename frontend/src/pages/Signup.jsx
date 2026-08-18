@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { signup } from '../services/api.js'
+import DynamicText from '../components/kokonutui/dynamic-text'
+import GoogleButton from '../components/GoogleButton.jsx'
 
 const IconBack = () => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -122,8 +124,13 @@ export default function Signup({ navigate, onAuthSuccess, openLegal }) {
           CodeScope
         </div>
 
+        <DynamicText className="min-h-0 p-0 mb-2" />
+
         <h1 className="auth-heading">Create your account</h1>
         <p className="auth-sub">Start scanning repositories and saving notes in seconds.</p>
+
+        <GoogleButton disabled={loading} />
+        <div className="oauth-divider">or sign up with email</div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           {/* Username */}

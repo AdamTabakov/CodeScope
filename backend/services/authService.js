@@ -78,12 +78,13 @@ export async function resetPassword(token, newPassword) {
 }
 
 // Helper function to sign a JWT token for a user
-function signToken(user) {
+export function signToken(user) {
   return jwt.sign(
     {
       // Use user.id if available, otherwise fallback to user._id (for MongoDB ObjectId)
       sub: user.id ?? user._id?.toString(),
       username: user.username,
+      email: user.email,
       role: user.role,
       emailVerified: user.emailVerified ?? false,
     },
@@ -96,11 +97,22 @@ function signToken(user) {
   )
 }
 
+// The user fields that are safe to expose to the client.
+export function publicUser(user) {
+  return {
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    emailVerified: !!user.emailVerified,
+  }
+}
+
 // Function to handle user login
 export async function loginUser(identifier, password) {
   // Find the user by username or email
   const user = await findUserForLogin(identifier)
-  const passwordMatches = user ? await bcrypt.compare(password, user.passwordHash) : false
+  // Google-created accounts have no password; they can only sign in via OAuth.
+  const passwordMatches = user?.passwordHash ? await bcrypt.compare(password, user.passwordHash) : false
 
   // If the user is not found or the password does not match, return an error
   if (!passwordMatches) {
@@ -110,12 +122,7 @@ export async function loginUser(identifier, password) {
   return {
     ok: true,
     token: signToken(user),
-    user: {
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      emailVerified: !!user.emailVerified,
-    },
+    user: publicUser(user),
   }
 }
 
@@ -152,12 +159,7 @@ export async function signupUser({ username, email, password }) {
   return {
     ok: true,
     token: signToken(user),
-    user: {
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      emailVerified: false,
-    },
+    user: publicUser(user),
   }
 }
 
@@ -189,11 +191,6 @@ export async function verifyEmail(token) {
   return {
     ok: true,
     token: signToken(user),
-    user: {
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      emailVerified: true,
-    },
+    user: publicUser(user),
   }
 }

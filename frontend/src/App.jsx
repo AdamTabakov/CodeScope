@@ -6,6 +6,7 @@ import LoadingBar from './components/LoadingBar.jsx'
 import CookieBanner from './components/CookieBanner.jsx'
 import Home from './pages/Home.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
+import { getMe } from './services/api.js'
 import { VIEW_META } from './meta.js'
 
 // Lazy load the views that are not the landing page
@@ -104,6 +105,22 @@ export default function App() {
     const pathname = window.location.pathname
 
     let initialView = 'home'
+
+    // Google OAuth lands here with ?token=… in the URL. The token is stored,
+    // the URL is scrubbed, and the session is resolved once the user is fetched.
+    if (pathname === '/auth/callback') {
+      if (token) {
+        setAuth({ token, user: null })
+        initialView = 'dashboard'
+      } else {
+        initialView = 'login'
+      }
+      const destination = initialView === 'dashboard' ? '/dashboard' : '/login'
+      window.history.replaceState({ view: initialView }, '', destination)
+      setView(initialView)
+      return
+    }
+
     if (token && pathname.includes('/verify')) {
       setVerifyToken(token)
       initialView = 'verify'
@@ -120,6 +137,25 @@ export default function App() {
     window.history.replaceState({ view: initialView }, '', `${pathname}${search ? `?${search}` : ''}`)
     setView(initialView)
   }, [])
+
+  // Resolve the user for a session that only has a token (Google OAuth return).
+  useEffect(() => {
+    if (!auth.token || auth.user) return
+    let cancelled = false
+    getMe(auth.token)
+      .then(({ user }) => {
+        if (!cancelled) setAuth({ token: auth.token, user })
+      })
+      .catch(() => {
+        if (cancelled) return
+        setAuth({ token: null, user: null })
+        setErrorState({ type: 401, message: 'Sign in to access this page.' })
+        setView('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [auth.token])
 
   const navigate = (target, opts = {}) => {
     // A signed-in user never lands on the marketing home page
@@ -217,6 +253,9 @@ export default function App() {
   const renderPage = () => {
     // if the view requires auth and the user is not authenticated, show an error
     if (AUTH_REQUIRED.has(view) && !auth.user) {
+      // A token without a user means the session is still resolving (e.g. the
+      // user just returned from Google OAuth). Hold rendering until it resolves.
+      if (auth.token) return null
       return (
         <ErrorPage
           type={401}

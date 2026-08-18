@@ -3,6 +3,7 @@ import { after, before, describe, it } from 'node:test'
 import jwt from 'jsonwebtoken'
 import app from '../app.js'
 import { config } from '../config/env.js'
+import { parseSignupBody } from '../utils/validation.js'
 
 let server
 let baseUrl
@@ -157,5 +158,48 @@ describe('auth api', () => {
     })
 
     assert.equal(response.status, 400)
+  })
+
+  // Test: /api/auth/me requires a valid session.
+  it('rejects /api/auth/me without a token', async () => {
+    const response = await fetch(`${baseUrl}/api/auth/me`)
+    assert.equal(response.status, 401)
+  })
+})
+
+// Signup input validation does not need a database, so it is tested directly.
+describe('signup email validation', () => {
+  const validBody = {
+    username: 'newuser',
+    email: 'newuser@example.com',
+    password: 'password123',
+    confirmPassword: 'password123',
+  }
+
+  it('accepts a normal email domain', () => {
+    const result = parseSignupBody(validBody)
+    assert.equal(result.ok, true)
+  })
+
+  it('rejects disposable email domains', () => {
+    for (const email of [
+      'someone@mailinator.com',
+      'someone@10minutemail.com',
+      'someone@yopmail.fr',
+      'someone@temp-mail.org',
+      'someone@getnada.com',
+      'someone@maildrop.cc',
+      'someone@guerrillamail.com',
+    ]) {
+      const result = parseSignupBody({ ...validBody, email })
+      assert.equal(result.ok, false)
+      assert.equal(result.field, 'email')
+    }
+  })
+
+  it('rejects subdomains of disposable providers', () => {
+    const result = parseSignupBody({ ...validBody, email: 'someone@box.10minutemail.com' })
+    assert.equal(result.ok, false)
+    assert.equal(result.field, 'email')
   })
 })
