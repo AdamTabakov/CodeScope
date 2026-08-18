@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { animate, useMotionValue } from 'motion/react'
 import { Gauge, MessageSquareText, ScanSearch, ShieldAlert } from 'lucide-react'
 import CardFlip from '../components/kokonutui/card-flip'
+import FlowField from '../components/kokonutui/flow-field'
 import { CardContainer, CardBody, CardItem } from '../components/ui/3d-card'
-import { GoogleGeminiEffect } from '../components/ui/google-gemini-effect'
 
 // ── Code snippets ──────────────────────────────────────────────────────────────
 // Each line is an array of { t: text, c: CSS-class } tokens.
@@ -389,27 +388,6 @@ export default function Home({ navigate, openLegal }) {
   const exitTimerRef = useRef(null)
   const intervalRef = useRef(null)
 
-  // The hero background line art draws itself in on load so it is visible
-  // immediately (previously it was tied to scroll and invisible at the top).
-  const pathLengths = [
-    useMotionValue(0),
-    useMotionValue(0),
-    useMotionValue(0),
-    useMotionValue(0),
-    useMotionValue(0),
-  ]
-
-  useEffect(() => {
-    const controls = pathLengths.map((value, index) =>
-      animate(value, 1, {
-        duration: 1.6,
-        delay: 0.2 + index * 0.22,
-        ease: [0.23, 1, 0.32, 1],
-      }),
-    )
-    return () => controls.forEach((control) => control.stop())
-  }, [pathLengths])
-
   // Two-phase transition: exit old → swap content → enter new
   const switchTo = (newIdx) => {
     clearTimeout(exitTimerRef.current)
@@ -449,7 +427,9 @@ export default function Home({ navigate, openLegal }) {
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="hero">
         <div className="hero-bg" aria-hidden="true">
-          <GoogleGeminiEffect pathLengths={pathLengths} />
+          <FlowField theme="mono" density="sparse">
+            <></>
+          </FlowField>
         </div>
 
         <div className="hero-inner">
