@@ -1,19 +1,6 @@
-import crypto from 'node:crypto'
-import { loginUser, signupUser, verifyEmail, requestPasswordReset, resetPassword, signToken } from '../services/authService.js'
-import { buildGoogleAuthUrl, exchangeCodeForUser, findOrCreateGoogleUser } from '../services/googleAuthService.js'
+import { loginUser, signupUser, verifyEmail, requestPasswordReset, resetPassword } from '../services/authService.js'
 import { parseLoginBody, parseSignupBody, parseForgotPasswordBody, parseResetPasswordBody } from '../utils/validation.js'
 import { isConnected } from '../config/db.js'
-import { config } from '../config/env.js'
-
-const OAUTH_STATE_COOKIE = 'google_oauth_state'
-const OAUTH_STATE_TTL_MS = 10 * 60 * 1000
-
-// Reads a cookie value without needing a cookie-parsing dependency.
-function readCookie(header, name) {
-  if (!header) return undefined
-  const match = String(header).match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : undefined
-}
 
 // Controller for handling user login
 export async function login(request, response, next) {
@@ -118,60 +105,4 @@ export async function resetPasswordEndpoint(request, response, next) {
   } catch (error) {
     return next(error)
   }
-}
-
-// Starts a Google OAuth flow: sets a state cookie and redirects to Google's
-// consent screen. Credentials stay server-side.
-export async function googleAuth(request, response, next) {
-  try {
-    if (!config.googleClientId || !config.googleClientSecret) {
-      return response.status(503).json({ error: 'Google sign-in is currently unavailable.' })
-    }
-
-    const state = crypto.randomBytes(24).toString('hex')
-    response.cookie(OAUTH_STATE_COOKIE, state, {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: OAUTH_STATE_TTL_MS,
-      secure: config.isProd,
-      path: '/',
-    })
-    return response.redirect(buildGoogleAuthUrl(state))
-  } catch (error) {
-    return next(error)
-  }
-}
-
-// Handles the redirect back from Google. Verifies the state cookie, exchanges
-// the code, and signs the user in by redirecting to the frontend callback with
-// a fresh session token.
-export async function googleAuthCallback(request, response, next) {
-  const expectedState = readCookie(request.headers.cookie, OAUTH_STATE_COOKIE)
-  response.clearCookie(OAUTH_STATE_COOKIE, { path: '/' })
-
-  const { code, state, error } = request.query
-  if (!expectedState || !state || state !== expectedState || !code || error) {
-    return response.redirect(`${config.frontendUrl}/login?googleError=1`)
-  }
-
-  try {
-    const profile = await exchangeCodeForUser(code)
-    const result = await findOrCreateGoogleUser(profile)
-    if (!result.ok) {
-      return response.redirect(`${config.frontendUrl}/login?googleError=2`)
-    }
-    const token = signToken(result.user)
-    return response.redirect(`${config.frontendUrl}/auth/callback?token=${encodeURIComponent(token)}`)
-  } catch (error) {
-    console.error('Google sign-in failed:', error)
-    return response.redirect(`${config.frontendUrl}/login?googleError=1`)
-  }
-}
-
-// Returns the authenticated user for a valid Bearer token.
-export async function me(request, response) {
-  const { username, email, role, emailVerified } = request.user
-  return response.json({
-    user: { username, email, role, emailVerified: !!emailVerified },
-  })
 }

@@ -1,9 +1,6 @@
 // Strip any trailing slashes from the configured API URL so a value like
 const BASE = `${String(import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')}/api`
 
-// Full-page link for the Google OAuth flow (login + signup).
-export const GOOGLE_AUTH_URL = `${BASE}/auth/google`
-
 async function request(path, body) {
   let response
 
@@ -80,11 +77,6 @@ export function login(identifier, password) {
 // Sign up a new user
 export function signup({ username, email, password, confirmPassword }) {
   return request('/signup', { username, email, password, confirmPassword })
-}
-
-// Fetch the user for an existing session (e.g. after an OAuth callback).
-export function getMe(token) {
-  return apiFetch('/auth/me', { token })
 }
 
 // Verify a user's email

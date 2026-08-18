@@ -10,7 +10,7 @@
  * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { ArrowRight, Repeat2 } from "lucide-react";
+import { ArrowRight, Repeat2, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ export interface CardFlipProps {
   features?: string[];
   actionLabel?: string;
   onAction?: () => void;
+  icon?: LucideIcon;
 }
 
 export default function CardFlip({
@@ -30,6 +31,7 @@ export default function CardFlip({
   features = ["UI/UX", "Modern Design", "Tailwind CSS", "Kokonut UI"],
   actionLabel = "Start today",
   onAction,
+  icon: Icon,
 }: CardFlipProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -74,6 +76,17 @@ export default function CardFlip({
           )}
         >
           <div className="relative h-full overflow-hidden bg-gradient-to-b from-[var(--surface)] to-[var(--bg)]">
+            {Icon ? (
+              <div className="absolute left-1/2 top-10 -translate-x-1/2">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)]">
+                  <Icon
+                    aria-hidden="true"
+                    className="h-6 w-6 text-[var(--cyan)]"
+                    strokeWidth={1.5}
+                  />
+                </div>
+              </div>
+            ) : null}
             <div
               aria-hidden="true"
               className="absolute inset-0 flex items-start justify-center pt-24"

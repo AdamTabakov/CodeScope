@@ -84,7 +84,6 @@ export function signToken(user) {
       // Use user.id if available, otherwise fallback to user._id (for MongoDB ObjectId)
       sub: user.id ?? user._id?.toString(),
       username: user.username,
-      email: user.email,
       role: user.role,
       emailVerified: user.emailVerified ?? false,
     },
@@ -111,8 +110,7 @@ export function publicUser(user) {
 export async function loginUser(identifier, password) {
   // Find the user by username or email
   const user = await findUserForLogin(identifier)
-  // Google-created accounts have no password; they can only sign in via OAuth.
-  const passwordMatches = user?.passwordHash ? await bcrypt.compare(password, user.passwordHash) : false
+  const passwordMatches = user ? await bcrypt.compare(password, user.passwordHash) : false
 
   // If the user is not found or the password does not match, return an error
   if (!passwordMatches) {

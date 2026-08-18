@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useScroll, useSpring, useTransform } from 'motion/react'
+import { animate, useMotionValue } from 'motion/react'
+import { Gauge, MessageSquareText, ScanSearch, ShieldAlert } from 'lucide-react'
 import CardFlip from '../components/kokonutui/card-flip'
 import { CardContainer, CardBody, CardItem } from '../components/ui/3d-card'
 import { GoogleGeminiEffect } from '../components/ui/google-gemini-effect'
@@ -303,6 +304,7 @@ const SNIPPETS = [
 const FEATURES = [
   {
     title: 'Smart Analysis',
+    icon: ScanSearch,
     desc: 'Traces behavior across the entire codebase. Not just the file you paste.',
     subtitle: 'The whole repo, not just one file.',
     description:
@@ -316,6 +318,7 @@ const FEATURES = [
   },
   {
     title: 'Issue Detection',
+    icon: ShieldAlert,
     desc: 'Surfaces injection risks, missing guards, unverified tokens, and logic gaps.',
     subtitle: 'Real risks a reviewer would spot.',
     description:
@@ -329,6 +332,7 @@ const FEATURES = [
   },
   {
     title: 'Instant Scores',
+    icon: Gauge,
     desc: 'Complexity scores with the exact functions and loops that drive them up.',
     subtitle: 'Know exactly what is complex and why.',
     description:
@@ -338,6 +342,20 @@ const FEATURES = [
       'Per-function breakdown',
       'Loop & branch drivers',
       'Zero configuration',
+    ],
+  },
+  {
+    title: 'AI Code Q&A',
+    icon: MessageSquareText,
+    desc: 'Ask anything about the code and get streaming answers grounded in the repo.',
+    subtitle: 'Chat with your codebase.',
+    description:
+      'Ask questions about any file, function, or architecture decision and get plain-English answers grounded in the actual repository context — not a generic guess.',
+    features: [
+      'Streaming plain-English answers',
+      'Grounded in repo context',
+      'Follow-up questions',
+      'Server-side analysis',
     ],
   },
 ]
@@ -364,7 +382,6 @@ const INTERVAL_MS = 6000
 const EXIT_MS = 190   // how long the exit animation plays before content swaps
 
 export default function Home({ navigate, openLegal }) {
-  const heroRef = useRef(null)
   const [activeIdx, setActiveIdx] = useState(0)
   const [phase, setPhase] = useState('enter')  // 'enter' | 'exit'
   const [progressKey, setProgressKey] = useState(0)
@@ -372,16 +389,26 @@ export default function Home({ navigate, openLegal }) {
   const exitTimerRef = useRef(null)
   const intervalRef = useRef(null)
 
-  // As the hero scrolls past, the background line art draws itself in.
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end end'] })
-  const spring = useSpring(scrollYProgress, { stiffness: 60, damping: 20, restDelta: 0.001 })
+  // The hero background line art draws itself in on load so it is visible
+  // immediately (previously it was tied to scroll and invisible at the top).
   const pathLengths = [
-    useTransform(spring, [0, 0.6], [0, 1]),
-    useTransform(spring, [0.1, 0.7], [0, 1]),
-    useTransform(spring, [0.2, 0.8], [0, 1]),
-    useTransform(spring, [0.3, 0.9], [0, 1]),
-    useTransform(spring, [0.4, 1], [0, 1]),
+    useMotionValue(0),
+    useMotionValue(0),
+    useMotionValue(0),
+    useMotionValue(0),
+    useMotionValue(0),
   ]
+
+  useEffect(() => {
+    const controls = pathLengths.map((value, index) =>
+      animate(value, 1, {
+        duration: 1.6,
+        delay: 0.2 + index * 0.22,
+        ease: [0.23, 1, 0.32, 1],
+      }),
+    )
+    return () => controls.forEach((control) => control.stop())
+  }, [pathLengths])
 
   // Two-phase transition: exit old → swap content → enter new
   const switchTo = (newIdx) => {
@@ -420,7 +447,7 @@ export default function Home({ navigate, openLegal }) {
   return (
     <div className="home-page">
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="hero" ref={heroRef}>
+      <section className="hero">
         <div className="hero-bg" aria-hidden="true">
           <GoogleGeminiEffect pathLengths={pathLengths} />
         </div>
@@ -505,6 +532,7 @@ export default function Home({ navigate, openLegal }) {
             <CardFlip
               key={feature.title}
               title={feature.title}
+              icon={feature.icon}
               subtitle={feature.subtitle}
               description={feature.description}
               features={feature.features}

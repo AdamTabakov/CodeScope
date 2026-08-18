@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { health } from '../controllers/healthController.js'
-import { login, signup, verifyEmailAddress, forgotPassword, resetPasswordEndpoint, googleAuth, googleAuthCallback, me } from '../controllers/authController.js'
+import { login, signup, verifyEmailAddress, forgotPassword, resetPasswordEndpoint } from '../controllers/authController.js'
 import { loginLimiter } from '../middleware/loginLimiter.js'
 import { signupLimiter } from '../middleware/signupLimiter.js'
 import { forgotPasswordLimiter, resetPasswordLimiter } from '../middleware/passwordResetLimiter.js'
@@ -24,9 +24,6 @@ router.post('/signup', signupLimiter, signup)
 router.get('/verify-email', verifyEmailAddress)
 router.post('/forgot-password', forgotPasswordLimiter, forgotPassword)
 router.post('/reset-password', resetPasswordLimiter, resetPasswordEndpoint)
-router.get('/auth/google', googleAuth)
-router.get('/auth/google/callback', googleAuthCallback)
-router.get('/auth/me', requireAuth, me)
 router.post('/chat', chatLimiter, requireAuth, chat)
 router.post('/repositories/upload', repositoryLimiter, requireAuth, uploadRepository)
 router.post('/projects', requireAuth, saveProjectEndpoint)

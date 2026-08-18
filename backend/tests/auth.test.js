@@ -159,12 +159,6 @@ describe('auth api', () => {
 
     assert.equal(response.status, 400)
   })
-
-  // Test: /api/auth/me requires a valid session.
-  it('rejects /api/auth/me without a token', async () => {
-    const response = await fetch(`${baseUrl}/api/auth/me`)
-    assert.equal(response.status, 401)
-  })
 })
 
 // Signup input validation does not need a database, so it is tested directly.

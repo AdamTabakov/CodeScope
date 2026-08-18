@@ -19,27 +19,10 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    // passwordHash field to store hashed passwords. Only present for accounts
-    // created with a password (authProvider 'local'); Google accounts have none.
+    // passwordHash field to store hashed passwords
     passwordHash: {
       type: String,
-      required: false,
-      default: null,
-    },
-
-    // How the account was created.
-    authProvider: {
-      type: String,
-      enum: ['local', 'google'],
-      default: 'local',
-    },
-    // Google account identifier. Sparse so local users are unaffected by the
-    // unique index.
-    googleId: {
-      type: String,
-      unique: true,
-      sparse: true,
-      default: null,
+      required: true,
     },
 
     // email verification status

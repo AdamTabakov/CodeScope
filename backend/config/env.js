@@ -25,12 +25,6 @@ export const config = {
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   appUrl: process.env.APP_URL || 'http://localhost:3000',
-  // Where the browser should land after an OAuth round-trip. Defaults to the
-  // backend origin because production serves the built frontend co-located.
-  frontendUrl: process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000',
-  // Google OAuth credentials. Kept server-side only; never exposed to the client.
-  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   isProd,
   resendApiKey: process.env.RESEND_API_KEY || '',
   emailFrom: process.env.EMAIL_FROM || 'CodeScope <no-reply@codescope.local>',

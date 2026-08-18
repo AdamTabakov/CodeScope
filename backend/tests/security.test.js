@@ -125,7 +125,7 @@ describe('security: error envelope', () => {
   })
 
   it('never exposes the x-powered-by header', async () => {
-    const res = await fetch(`${baseUrl}/api/auth/me`)
+    const res = await fetch(`${baseUrl}/api/projects`)
     assert.equal(res.headers.get('x-powered-by'), null)
     assert.equal(res.headers.get('x-content-type-options'), 'nosniff')
     assert.ok(res.headers.get('x-frame-options'))
@@ -135,12 +135,12 @@ describe('security: error envelope', () => {
 describe('security: CORS', () => {
   it('allows a configured origin', async () => {
     const origin = config.corsOrigins[0]
-    const res = await fetch(`${baseUrl}/api/auth/me`, { headers: { Origin: origin } })
+    const res = await fetch(`${baseUrl}/api/projects`, { headers: { Origin: origin } })
     assert.equal(res.headers.get('access-control-allow-origin'), origin)
   })
 
   it('blocks a disallowed origin with CORS_BLOCKED', async () => {
-    const res = await fetch(`${baseUrl}/api/auth/me`, { headers: { Origin: 'https://evil.example' } })
+    const res = await fetch(`${baseUrl}/api/projects`, { headers: { Origin: 'https://evil.example' } })
     const body = await res.json()
     assert.equal(res.status, 403)
     assert.equal(body.code, 'CORS_BLOCKED')
@@ -148,21 +148,15 @@ describe('security: CORS', () => {
 })
 
 describe('security: authentication tokens', () => {
-  it('accepts a valid token and returns the user without secrets', async () => {
-    const res = await fetch(`${baseUrl}/api/auth/me`, {
+  it('accepts a valid token on a protected endpoint', async () => {
+    const res = await fetch(`${baseUrl}/api/projects`, {
       headers: { Authorization: `Bearer ${signTestToken()}` },
     })
-    const body = await res.json()
-    assert.equal(res.status, 200)
-    assert.deepEqual(Object.keys(body.user).sort(), ['email', 'emailVerified', 'role', 'username'])
-    assert.equal(body.user.username, 'tester')
-    assert.equal(body.user.email, 'tester@example.com')
-    assert.ok(!('passwordHash' in body.user))
-    assert.ok(!('sub' in body.user))
+    assert.notEqual(res.status, 401)
   })
 
   it('rejects a token signed with the wrong secret', async () => {
-    const res = await fetch(`${baseUrl}/api/auth/me`, {
+    const res = await fetch(`${baseUrl}/api/projects`, {
       headers: { Authorization: `Bearer ${signTestToken({ secret: 'wrong-secret' })}` },
     })
     const body = await res.json()
@@ -173,7 +167,7 @@ describe('security: authentication tokens', () => {
   it('rejects a tampered token', async () => {
     const token = signTestToken()
     const tampered = token.slice(0, -1) + (token.endsWith('a') ? 'b' : 'a')
-    const res = await fetch(`${baseUrl}/api/auth/me`, {
+    const res = await fetch(`${baseUrl}/api/projects`, {
       headers: { Authorization: `Bearer ${tampered}` },
     })
     assert.equal(res.status, 401)
@@ -181,7 +175,7 @@ describe('security: authentication tokens', () => {
 
   it('rejects tokens with the wrong issuer or audience', async () => {
     for (const overrides of [{ issuer: 'evil' }, { audience: 'evil' }]) {
-      const res = await fetch(`${baseUrl}/api/auth/me`, {
+      const res = await fetch(`${baseUrl}/api/projects`, {
         headers: { Authorization: `Bearer ${signTestToken(overrides)}` },
       })
       assert.equal(res.status, 401)
@@ -189,7 +183,7 @@ describe('security: authentication tokens', () => {
   })
 
   it('rejects an expired token', async () => {
-    const res = await fetch(`${baseUrl}/api/auth/me`, {
+    const res = await fetch(`${baseUrl}/api/projects`, {
       headers: { Authorization: `Bearer ${signTestToken({ expiresIn: '-1s' })}` },
     })
     const body = await res.json()
@@ -198,7 +192,7 @@ describe('security: authentication tokens', () => {
   })
 
   it('rejects a malformed token', async () => {
-    const res = await fetch(`${baseUrl}/api/auth/me`, {
+    const res = await fetch(`${baseUrl}/api/projects`, {
       headers: { Authorization: 'Bearer not-a-jwt' },
     })
     assert.equal(res.status, 401)
