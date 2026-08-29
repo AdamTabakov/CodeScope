@@ -1,7 +1,13 @@
 import rateLimit from 'express-rate-limit'
-import { streamAnswerCodeQuestion } from '../services/chatService.js'
+// Note: express-rate-limit defaults to in-memory storage, meaning rate limits
+// reset per server instance and don't work correctly with multiple processes.
+// For production with multiple instances, configure a Redis store:
+// npm install rate-limit-redis --save
+// const redis = require('redis').createClient({ url: process.env.REDIS_URL })
+// const chatLimiter = rateLimit({ store: new (require('rate-limit-redis')).RedisStore({ client: redis }) })
 
 // Rate limiter for chat requests to prevent abuse
+// 60 requests per 15 minutes per IP
 export const chatLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,

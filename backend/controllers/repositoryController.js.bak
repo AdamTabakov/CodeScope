@@ -1,10 +1,5 @@
 import rateLimit from 'express-rate-limit'
-// Note: express-rate-limit defaults to in-memory storage, meaning rate limits
-// reset per server instance and don't work correctly with multiple processes.
-// For production with multiple instances, configure a Redis store:
-// npm install rate-limit-redis --save
-// const redis = require('redis').createClient({ url: process.env.REDIS_URL })
-// const rateLimitRedis = rateLimit({ store: new (require('rate-limit-redis')).RedisStore({ client: redis }) })
+import { loadRepository } from '../services/repositoryService.js'
 
 // Rate limiter for repository uploads to prevent abuse
 export const repositoryLimiter = rateLimit({

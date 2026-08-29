@@ -5,6 +5,7 @@ import cors from 'cors'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import mongoose from 'mongoose'
 import apiRouter from './routes/api.js'
 import { errorHandler, apiNotFound } from './middleware/errorHandler.js'
 import { config } from './config/env.js'
@@ -26,13 +27,33 @@ const healthBody = '{"status":"ok","service":"codescope-homepage"}'
 // Disable the X-Powered-By header to avoid exposing the server technology.
 app.disable('x-powered-by')
 
-// Serve the health endpoint.
+// Serve the health endpoint with MongoDB connectivity check.
 app.use((request, response, next) => {
   if (request.method === 'GET' && request.url === '/api/health') {
-    response.statusCode = 200
-    response.setHeader('Content-Type', 'application/json; charset=utf-8')
-    response.setHeader('Content-Length', Buffer.byteLength(healthBody))
-    response.end(healthBody)
+    // Perform lightweight MongoDB connectivity check
+    const mongoUri = process.env.MONGODB_URI || ''
+    if (mongoUri) {
+      mongoose
+        .connect(mongoUri)
+        .then(() => {
+          mongoose.connection.close()
+          response.statusCode = 200
+          response.setHeader('Content-Type', 'application/json; charset=utf-8')
+          response.setHeader('Content-Length', Buffer.byteLength(healthBody))
+          response.end(healthBody)
+        })
+        .catch(() => {
+          response.statusCode = 503
+          response.setHeader('Content-Type', 'application/json; charset=utf-8')
+          response.setHeader('Content-Length', Buffer.byteLength('{"status":"error","service":"codescope-homepage","mongodb":"unreachable"}'))
+          response.end('{"status":"error","service":"codescope-homepage","mongodb":"unreachable"}')
+        })
+    } else {
+      response.statusCode = 200
+      response.setHeader('Content-Type', 'application/json; charset=utf-8')
+      response.setHeader('Content-Length', Buffer.byteLength(healthBody))
+      response.end(healthBody)
+    }
     return
   }
   next()

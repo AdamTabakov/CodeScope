@@ -42,6 +42,52 @@ function isBinary(path) {
 function shouldIgnore(path) {
   return IGNORE_PREFIXES.some((prefix) => path.startsWith(prefix))
 }
+// Split file content into function/class-level chunks for retrieval
+function chunkByFunctions(content) {
+  const chunks = []
+  // Match function/class declarations: "function name() {", "const name = function() {", "class Name {", etc.
+  const regex = /(?:function\s+\w+|const\s+\w+\s*=\s*function|class\s+\w+|async\s+function\s+\w+)\s*\([^)]*\)\s*\{|[\{\}]|^\s*\/\//gm
+  const lines = content.split('\n')
+  let currentChunk = []
+  let currentDepth = 0
+
+  for (const line of lines) {
+    const indent = line.match(/^\s*/)?.[0] || ''
+    const trimmed = line.trim()
+
+    // Skip empty lines and comments for chunk boundaries but include them in chunks
+    if (trimmed === '') {
+      currentChunk.push(line)
+      continue
+    }
+
+    // Track brace depth to detect function boundaries
+    const braceMatches = trimmed.match(/[{}]/g)
+    if (braceMatches) {
+      currentDepth += braceMatches.filter((c) => c === '{').length
+      currentDepth -= braceMatches.filter((c) => c === '}').length
+    }
+
+    // If we've closed a top-level function and hit a new one, start a new chunk
+    if (
+      currentChunk.length > 0 &&
+      /^\s*(function|const|class|async\s+function)\s+\w+/.test(trimmed) &&
+      currentDepth === 0
+    ) {
+      chunks.push(currentChunk.join('\n'))
+      currentChunk = []
+    }
+
+    currentChunk.push(line)
+  }
+
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.join('\n'))
+  }
+
+  // Filter out chunks that are too small (less than 3 lines) and too large (more than 200 lines)
+  return chunks.filter((chunk) => chunk.trim().split('\n').length >= 3 && chunk.trim().split('\n').length <= 200)
+}
 // Helper function to parse a GitHub repository URL and extract owner, repo, branch, and subpath
 export function parseGitHubUrl(raw) {
   if (!raw || typeof raw !== 'string') {
@@ -80,6 +126,7 @@ async function githubJson(url, metrics) {
     headers: {
       Accept: 'application/vnd.github+json',
       'User-Agent': 'CodeScope',
+      ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
     },
   })
   metrics.githubMs += performance.now() - started
@@ -103,7 +150,7 @@ async function githubJson(url, metrics) {
 async function githubText(url, metrics) {
   metrics.apiCalls += 1
   const started = performance.now()
-  const response = await fetch(url, { headers: { 'User-Agent': 'CodeScope' } })
+  const response = await fetch(url, { headers: { 'User-Agent': 'CodeScope', ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {} ) } })
   metrics.githubMs += performance.now() - started
   metrics.rateLimitRemaining = response.headers.get('x-ratelimit-remaining') ?? metrics.rateLimitRemaining
   metrics.rateLimitReset = response.headers.get('x-ratelimit-reset') ?? metrics.rateLimitReset
@@ -149,7 +196,35 @@ function buildTree(paths) {
 export async function loadRepository(repoUrl) {
   const started = performance.now()
   const metrics = { apiCalls: 0, githubMs: 0, rateLimitRemaining: null, rateLimitReset: null }
+
+  // Parse GitHub URL once (used for cache key and ingestion)
   const { owner, repo, branch: urlBranch, subpath } = parseGitHubUrl(repoUrl)
+
+  // Simple in-memory cache with TTL (for development; use MongoDB/Redis in production)
+  const cache = globalThis.__codescope_cache ?? new Map()
+  const cacheTtl = 60 * 60 * 1000 // 1 hour
+
+  // Check cache first: hash repo URL + branch
+  const cacheHash = `${owner}/${repo}@${urlBranch || 'default'}`
+  const cachedEntry = cache.get(cacheHash)
+  if (cachedEntry && cachedEntry.expires > Date.now()) {
+    console.log('Repo cache hit for', cacheHash)
+    cache.delete(cacheHash) // remove used entry so it can be re-cached
+    const { result } = cachedEntry
+    return {
+      meta: result.meta,
+      tree: result.tree,
+      files: result.files,
+      metrics: result.metrics,
+    }
+  }
+
+  // If entry exists but expired, remove it
+  if (cachedEntry) {
+    cache.delete(cacheHash)
+  }
+
+  const branch = urlBranch || 'main'
   const repoInfo = await githubJson(`https://api.github.com/repos/${owner}/${repo}`, metrics)
 
   // If error with repo
@@ -159,7 +234,6 @@ export async function loadRepository(repoUrl) {
     throw new Error(`Repository is too large (${Math.round(repoInfo.size / 1024)}MB). Maximum is 100MB.`)
   }
 
-  const branch = urlBranch || repoInfo.default_branch || 'main'
   const treeData = await githubJson(
     `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
     metrics,
@@ -193,7 +267,7 @@ export async function loadRepository(repoUrl) {
       const rawText = await githubText(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodedPath}`, metrics)
       const lineCount = rawText ? rawText.split('\n').length : 0
       linesOfCode += lineCount
-      files.push({ path, language, lineCount, content: rawText.slice(0, 50000) })
+      files.push({ path, language, lineCount, content: rawText ? rawText.slice(0, 50000) : '' })
     }
   }
 
@@ -206,7 +280,14 @@ export async function loadRepository(repoUrl) {
     languages.add(language)
   }
 
-  return {
+  // Compute function-level chunks for each file's content to enable retrieval
+  for (const file of files) {
+    if (file.content) {
+      file.chunks = chunkByFunctions(file.content).slice(0, 10) // top 10 chunks per file
+    }
+  }
+
+  const result = {
     meta: { owner, repo, branch, fullName: `${owner}/${repo}`, url: repoInfo.html_url },
     tree: buildTree(paths),
     files,
@@ -225,4 +306,13 @@ export async function loadRepository(repoUrl) {
       truncated: totalFiles > MAX_FILE_COUNT,
     },
   }
+
+  // Cache the result for future reuse (in-memory TTL cache)
+  cache.set(cacheHash, {
+    expires: Date.now() + cacheTtl,
+    result,
+  })
+  globalThis.__codescope_cache = cache
+
+  return result
 }

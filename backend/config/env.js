@@ -23,6 +23,7 @@ export const config = {
   adminEmail: process.env.ADMIN_EMAIL || 'adam@codescope.local',
   mongoUri: process.env.MONGODB_URI || '',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+  githubToken: process.env.GITHUB_TOKEN || '',
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   appUrl: process.env.APP_URL || 'http://localhost:3000',
   isProd,
