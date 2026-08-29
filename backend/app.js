@@ -33,21 +33,24 @@ app.use((request, response, next) => {
     // Perform lightweight MongoDB connectivity check
     const mongoUri = process.env.MONGODB_URI || ''
     if (mongoUri) {
-      mongoose
-        .connect(mongoUri)
-        .then(() => {
-          mongoose.connection.close()
+      try {
+        if (mongoose.connection.readyState === 1) {
           response.statusCode = 200
           response.setHeader('Content-Type', 'application/json; charset=utf-8')
           response.setHeader('Content-Length', Buffer.byteLength(healthBody))
           response.end(healthBody)
-        })
-        .catch(() => {
+        } else {
           response.statusCode = 503
           response.setHeader('Content-Type', 'application/json; charset=utf-8')
           response.setHeader('Content-Length', Buffer.byteLength('{"status":"error","service":"codescope-homepage","mongodb":"unreachable"}'))
           response.end('{"status":"error","service":"codescope-homepage","mongodb":"unreachable"}')
-        })
+        }
+      } catch {
+        response.statusCode = 503
+        response.setHeader('Content-Type', 'application/json; charset=utf-8')
+        response.setHeader('Content-Length', Buffer.byteLength('{"status":"error","service":"codescope-homepage","mongodb":"unreachable"}'))
+        response.end('{"status":"error","service":"codescope-homepage","mongodb":"unreachable"}')
+      }
     } else {
       response.statusCode = 200
       response.setHeader('Content-Type', 'application/json; charset=utf-8')

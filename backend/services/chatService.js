@@ -200,32 +200,6 @@ function repoSnapshotWithRetrieval(context = {}) {
   ].join('\n\n')
 }
 
-// Fallback answer when Gemini API key is not set
-function fallbackAnswer(message, context = {}) {
-  const metrics = context.metrics ?? {}
-  const languages = Array.isArray(metrics.languages) ? metrics.languages.join(', ') : 'Unknown'
-  const repo = context.repo ?? 'this repository'
-  const file = context.file ? ` Selected file: ${context.file}.` : ''
-
-  if (/summari[sz]e|overview|initialize|initial/i.test(message)) {
-    return [
-      `${repo} contains ${metrics.filesRetrieved ?? 0} retrieved files and ${metrics.linesOfCode ?? 0} lines of code across ${languages}.`,
-      `The largest visible focus areas are represented by the retrieved file tree and language mix.${file}`,
-      'Ask a specific question about architecture, bugs, security, tests, or an individual file for a deeper answer.',
-    ].join('\n')
-  }
-
-  if (!/repo|code|file|function|bug|security|test|complex|performance|architecture|dependency|summari[sz]e|explain|refactor|api/i.test(message)) {
-    return 'I can only answer questions about the loaded repository and its code. Ask about a file, architecture, bugs, tests, security, or performance.'
-  }
-
-  return [
-    `I can answer based on the loaded context for ${repo}.${file}`,
-    `Available metrics: ${metrics.filesRetrieved ?? 0} files, ${metrics.linesOfCode ?? 0} LOC, languages: ${languages}.`,
-    'Set GEMINI_API_KEY on the backend to enable deeper AI analysis; without it, CodeScope returns this deterministic repository-aware fallback.',
-  ].join('\n')
-}
-
 export async function streamAnswerCodeQuestion(message, context, onDelta, onDone) {
   if (!config.geminiApiKey) {
     // No API key — send the deterministic fallback as a single delta so the
@@ -263,7 +237,8 @@ export async function streamAnswerCodeQuestion(message, context, onDelta, onDone
             maxOutputTokens: 4096,
           },
         }),
-      )
+      }
+    )
 
       // If the API response is not OK, fall back to local answer
       if (!response.ok) {
@@ -290,7 +265,6 @@ export async function streamAnswerCodeQuestion(message, context, onDelta, onDone
       onDone({ model: 'codescope-local-fallback' })
     }
   }
-}
 
 // Reads a Gemini streaming response body (Server-Sent Events) and invokes
 // callback(data) with each parsed GenerateContentResponse chunk.
