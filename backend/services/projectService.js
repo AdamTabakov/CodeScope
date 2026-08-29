@@ -63,7 +63,7 @@ export async function saveProject(userId, payload) {
       },
       $setOnInsert: { user: userId, repoUrl: data.repoUrl },
     },
-    { new: true, upsert: true, runValidators: true },
+    { returnDocument: 'after', upsert: true, runValidators: true },
   )
   return project
 }

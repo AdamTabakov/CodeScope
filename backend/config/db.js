@@ -40,6 +40,22 @@ export async function connectDb() {
 async function ensureEmailIndexes() {
   try {
     const allowlist = config.duplicateEmailAllowlist
+
+    // Remove duplicate email documents, keeping the earliest-created one for each email.
+    const duplicates = await User.collection.aggregate([
+      { $group: { _id: '$email', ids: { $push: '$_id' }, count: { $sum: 1 } } },
+      { $match: { count: { $gt: 1 } } },
+    ]).toArray()
+
+    for (const { _id: email, ids } of duplicates) {
+      const keeper = ids[0]
+      const removers = ids.slice(1)
+      if (removers.length > 0) {
+        await User.collection.deleteMany({ _id: { $in: removers } })
+        console.warn(`[db] Removed ${removers.length} duplicate(s) for email: ${email}`)
+      }
+    }
+
     const spec = { unique: true, key: { email: 1 }, name: 'email_unique' }
     if (allowlist.length > 0) {
       spec.partialFilterExpression =
