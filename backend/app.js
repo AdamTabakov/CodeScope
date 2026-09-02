@@ -10,7 +10,7 @@ import apiRouter from './routes/api.js'
 import { errorHandler, apiNotFound } from './middleware/errorHandler.js'
 import { config } from './config/env.js'
 
-// Initialize the Express app.
+// Initialize the Express app.a
 const app = express()
 
 // Trust the first proxy hop for rate limiting and CORS origin validation.
