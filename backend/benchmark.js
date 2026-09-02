@@ -2,6 +2,7 @@ import { loadRepository } from './services/repositoryService.js'
 
 const REPO_URL = 'https://github.com/acme/demo'
 
+// runBenchmark by running loadRepository multiple times and measuring performance.
 async function runBenchmark(iterations = 3) {
   let totalMs = 0
   let totalApiCalls = 0
