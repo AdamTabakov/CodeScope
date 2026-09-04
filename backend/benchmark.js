@@ -18,6 +18,7 @@ async function runBenchmark(iterations = 3) {
   const avgMs = totalMs / iterations
   const avgApiCalls = totalApiCalls / iterations
 
+  // output info
   console.log(`\nBenchmark: loadRepository('${REPO_URL}')`)
   console.log(`  Iterations: ${iterations}`)
   console.log(`  Average time: ${avgMs.toFixed(0)}ms`)
